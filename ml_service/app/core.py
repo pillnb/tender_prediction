@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,9 +12,9 @@ import numpy as np
 import pandas as pd
 
 ARTIFACTS_DIR = Path(__file__).resolve().parents[1] / "artifacts"
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_DATASET_PATH = PROJECT_ROOT / "tender_fix.xlsx"
-DEFAULT_CLIENT_MAPPING_PATH = PROJECT_ROOT / "Mapping_Client_BKI_Fix.xlsx"
+MODULE_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_DATASET_FILENAME = "tender_fix.xlsx"
+DEFAULT_CLIENT_MAPPING_FILENAME = "Mapping_Client_BKI_Fix.xlsx"
 MODEL_VERSION = "svr-benchmark-v1"
 TARGET_NAME = "harga_sebelum_approval"
 
@@ -122,6 +123,43 @@ class ModelArtifacts:
     metadata: dict[str, Any]
 
 
+def resolve_project_file(filename: str, env_var_name: str) -> Path:
+    configured_path = os.getenv(env_var_name)
+    candidate_paths: list[Path] = []
+
+    if configured_path:
+      configured = Path(configured_path)
+      candidate_paths.append(configured if configured.is_absolute() else Path.cwd() / configured)
+
+    candidate_paths.extend(
+        [
+            Path.cwd() / filename,
+            MODULE_ROOT / filename,
+            MODULE_ROOT.parent / filename,
+            ARTIFACTS_DIR.parent / filename,
+        ]
+    )
+
+    seen_paths: set[Path] = set()
+    unique_candidates: list[Path] = []
+
+    for candidate in candidate_paths:
+        resolved = candidate.resolve()
+        if resolved in seen_paths:
+            continue
+        seen_paths.add(resolved)
+        unique_candidates.append(resolved)
+
+    for candidate in unique_candidates:
+        if candidate.exists():
+            return candidate
+
+    attempted_paths = ", ".join(str(path) for path in unique_candidates)
+    raise FileNotFoundError(
+        f"File '{filename}' tidak ditemukan. Path yang dicoba: {attempted_paths}"
+    )
+
+
 def clean_harga_final(nilai: Any) -> float | np.nan:
     if pd.isna(nilai):
         return np.nan
@@ -161,7 +199,10 @@ def classify_project(text: str | None, project_category: str | None = None) -> s
 
 
 def load_client_mapping(path: Path | None = None) -> dict[str, str]:
-    mapping_path = path or DEFAULT_CLIENT_MAPPING_PATH
+    mapping_path = path or resolve_project_file(
+        DEFAULT_CLIENT_MAPPING_FILENAME,
+        "ML_CLIENT_MAPPING_PATH",
+    )
     df = pd.read_excel(mapping_path)
 
     if "Perusahaan" not in df.columns or "Type of Client" not in df.columns:
@@ -194,7 +235,10 @@ def prepare_training_dataframe(
     dataset_path: Path | None = None,
     client_mapping_path: Path | None = None,
 ) -> pd.DataFrame:
-    data_path = dataset_path or DEFAULT_DATASET_PATH
+    data_path = dataset_path or resolve_project_file(
+        DEFAULT_DATASET_FILENAME,
+        "ML_TRAINING_DATASET_PATH",
+    )
     df = pd.read_excel(data_path).copy()
 
     df = df.drop(columns=["No. Penawaran", "Contact Person", "No. Tlp.", "Email"], errors="ignore")
