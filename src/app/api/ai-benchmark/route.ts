@@ -6,9 +6,24 @@ import type { SvrPredictionRequestPayload, SvrPredictionResult } from "@/types/t
 const DEFAULT_ML_SERVICE_URL = "http://127.0.0.1:8001";
 const PYTHON_EXECUTABLE = process.env["PYTHON_EXECUTABLE"] || "python";
 const WINDOWS_PY_LAUNCHER = "py";
+const IS_PRODUCTION = process.env["NODE_ENV"] === "production";
+
+function getMlServiceUrl() {
+  const configuredUrl = process.env["ML_SERVICE_URL"];
+
+  if (configuredUrl) {
+    return configuredUrl;
+  }
+
+  if (IS_PRODUCTION) {
+    throw new Error("ML_SERVICE_URL wajib di-set pada environment production.");
+  }
+
+  return DEFAULT_ML_SERVICE_URL;
+}
 
 async function invokeFastApiService(payload: SvrPredictionRequestPayload) {
-  const baseUrl = process.env["ML_SERVICE_URL"] || DEFAULT_ML_SERVICE_URL;
+  const baseUrl = getMlServiceUrl();
   const response = await fetch(`${baseUrl}/predict-benchmark`, {
     method: "POST",
     headers: {
@@ -101,6 +116,10 @@ export async function POST(request: Request) {
 
       return NextResponse.json(result);
     } catch (serviceError) {
+      if (IS_PRODUCTION) {
+        throw serviceError;
+      }
+
       try {
         const fallbackResult = await invokeLocalPythonFallback(payload);
 

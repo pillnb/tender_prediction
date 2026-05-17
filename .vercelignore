@@ -1,0 +1,11 @@
+.git
+.next
+node_modules
+coverage
+docs
+*.log
+.next-*.log
+.env
+.env.*
+[contoh perhitungan harga] FORM PENAWARAN CA-25021_2 Des 2025 (2).xlsx
+standar_biaya_bki.xlsx

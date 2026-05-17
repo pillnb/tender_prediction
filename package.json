@@ -2,11 +2,18 @@
   "name": "website_kalkulator",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
+    "postinstall": "prisma generate",
+    "prebuild": "prisma generate",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/**/*.test.ts",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
