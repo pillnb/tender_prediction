@@ -4,8 +4,8 @@ import { AmbientGlow } from "@/components/layout/AmbientGlow";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "TenderFlow Pro | Institutional Tender Calculation",
-  description: "Detailed project cost estimation for high-precision institutional bids.",
+  title: "Tender Price | Rule Based Calculator",
+  description: "Rule-based tender price calculator for structured project cost estimation.",
 };
 
 const fontVariables = {
