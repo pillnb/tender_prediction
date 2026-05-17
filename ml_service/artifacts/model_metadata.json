@@ -1,0 +1,71 @@
+{
+  "target_name": "harga_sebelum_approval",
+  "generated_at": "2026-05-04T05:51:07.000114",
+  "models": {
+    "project_only": {
+      "model_name": "SVR Project-Only",
+      "model_version": "svr-benchmark-v1",
+      "trained_at": "2026-05-04T05:51:05.573325",
+      "target_column": "harga_sebelum_approval",
+      "feature_count": 17,
+      "feature_columns": [
+        "Year",
+        "Quarter",
+        "Month",
+        "Type of Client_BKI",
+        "Type of Client_DEPHUB",
+        "Type of Client_KELISTRIKAN",
+        "Type of Client_LAIN LAIN",
+        "Type of Client_LAIN-LAIN",
+        "Type of Client_MIGAS",
+        "Type of Client_MINERBA",
+        "Type of Client_PERINDUSTRIAN",
+        "Type of Project_Audit",
+        "Type of Project_Inspeksi",
+        "Type of Project_LAIN-LAIN",
+        "Type of Project_Pengujian",
+        "Type of Project_Sertifikasi",
+        "Type of Project_Survey/Identifikasi/Inventarisasi"
+      ],
+      "preprocessing_rules_version": "notebook-aligned-v1",
+      "metrics": {
+        "mae": 29618599.369342025,
+        "rmse": 76361410.10437046,
+        "mape": 1.3698485156913212
+      }
+    },
+    "hybrid": {
+      "model_name": "SVR Hybrid",
+      "model_version": "svr-benchmark-v1",
+      "trained_at": "2026-05-04T05:51:07.000114",
+      "target_column": "harga_sebelum_approval",
+      "feature_count": 18,
+      "feature_columns": [
+        "Year",
+        "Quarter",
+        "Month",
+        "Harga_log",
+        "Type of Client_BKI",
+        "Type of Client_DEPHUB",
+        "Type of Client_KELISTRIKAN",
+        "Type of Client_LAIN LAIN",
+        "Type of Client_LAIN-LAIN",
+        "Type of Client_MIGAS",
+        "Type of Client_MINERBA",
+        "Type of Client_PERINDUSTRIAN",
+        "Type of Project_Audit",
+        "Type of Project_Inspeksi",
+        "Type of Project_LAIN-LAIN",
+        "Type of Project_Pengujian",
+        "Type of Project_Sertifikasi",
+        "Type of Project_Survey/Identifikasi/Inventarisasi"
+      ],
+      "preprocessing_rules_version": "notebook-aligned-v1",
+      "metrics": {
+        "mae": 6524028.67722078,
+        "rmse": 18670691.524142627,
+        "mape": 0.19732646697592596
+      }
+    }
+  }
+}

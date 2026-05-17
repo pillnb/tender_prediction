@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model TenderCalculation {
+  id                    String   @id @default(cuid())
+  status                String   @default("draft")
+  projectName           String
+  projectCategory       String
+  projectLocation       String
+  companyName           String
+  companyCategory       String
+  durationDays          Int
+  workDate              DateTime
+  calculationVersion    String   @default("pt-bki-rule-engine-v1.1.0")
+  masterDataVersion     String   @default("2025.1 / 2025.1 / 2025.1")
+  overheadRate          Decimal  @db.Decimal(5, 2)
+  overheadFixedCost     Decimal  @default(0) @db.Decimal(18, 2)
+  profitMargin          Decimal  @db.Decimal(5, 2)
+  insuranceCost         Decimal  @db.Decimal(18, 2)
+  autoRoundFinalTotal   Boolean  @default(true)
+  directCostTotal       Decimal  @db.Decimal(18, 2)
+  overheadAmount        Decimal  @db.Decimal(18, 2)
+  subtotalBeforeProfit  Decimal  @db.Decimal(18, 2)
+  profitAmount          Decimal  @db.Decimal(18, 2)
+  finalTotal            Decimal  @db.Decimal(18, 2)
+  calculationPayload    Json
+  archivedAt            DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([status])
+  @@index([projectName])
+  @@index([companyName])
+  @@index([archivedAt])
+  @@index([createdAt])
+}

@@ -1,0 +1,26 @@
+{
+  "model_key": "hybrid",
+  "target_name": "harga_sebelum_approval",
+  "feature_columns": [
+    "Year",
+    "Quarter",
+    "Month",
+    "Harga_log",
+    "Type of Client_BKI",
+    "Type of Client_DEPHUB",
+    "Type of Client_KELISTRIKAN",
+    "Type of Client_LAIN LAIN",
+    "Type of Client_LAIN-LAIN",
+    "Type of Client_MIGAS",
+    "Type of Client_MINERBA",
+    "Type of Client_PERINDUSTRIAN",
+    "Type of Project_Audit",
+    "Type of Project_Inspeksi",
+    "Type of Project_LAIN-LAIN",
+    "Type of Project_Pengujian",
+    "Type of Project_Sertifikasi",
+    "Type of Project_Survey/Identifikasi/Inventarisasi"
+  ],
+  "uses_harga_log": true,
+  "model_version": "svr-benchmark-v1"
+}
