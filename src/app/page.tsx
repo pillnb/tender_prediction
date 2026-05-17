@@ -1,5 +1,8 @@
+import { Suspense } from "react";
 import { TopNavBar } from "@/components/layout/TopNavBar";
 import { TenderDashboard } from "@/components/features/tender/TenderDashboard";
+
+export const dynamic = "force-dynamic";
 
 export default function Home() {
   return (
@@ -8,7 +11,9 @@ export default function Home() {
 
       <main className="mt-16 min-h-screen px-6 py-12 sm:px-8">
         <div className="mx-auto max-w-5xl">
-          <TenderDashboard />
+          <Suspense fallback={null}>
+            <TenderDashboard />
+          </Suspense>
         </div>
       </main>
     </div>

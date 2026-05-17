@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { PrintAutoTrigger } from "@/components/features/tender/PrintAutoTrigger";
 import { PrintPageActions } from "@/components/features/tender/PrintPageActions";
@@ -131,7 +132,9 @@ export default async function TenderPrintPage({ params }: PageProps) {
 
   return (
     <div className="print-root bg-background min-h-screen">
-      <PrintAutoTrigger />
+      <Suspense fallback={null}>
+        <PrintAutoTrigger />
+      </Suspense>
       <PrintPageActions />
 
       <main className="mx-auto max-w-6xl px-6 pb-12 print:px-0 print:pb-0">

@@ -7,6 +7,9 @@ export const dynamic = "force-dynamic";
 export default async function ArchivedPage() {
   const records = await listTenderCalculations({
     includeArchived: true,
+  }).catch((error) => {
+    console.error("Failed to load archived tender calculations.", error);
+    return [];
   });
 
   return (

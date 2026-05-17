@@ -45,6 +45,14 @@ function toTitleCase(value: string | null | undefined) {
     .join(" ");
 }
 
+function highlightedField(label: string, value: string) {
+  return {
+    label,
+    value,
+    emphasis: "highlight" as const,
+  };
+}
+
 export async function GET(_: Request, context: RouteContext) {
   const { id } = await context.params;
   const record = await getTenderCalculationById(id);
@@ -146,11 +154,10 @@ export async function GET(_: Request, context: RouteContext) {
                 label: "Tarif",
                 value: formatIdr(computed.mobilityCosts.personnelDeployment.unitRate),
               },
-              {
-                label: "Subtotal",
-                value: formatIdr(computed.mobilityCosts.personnelDeployment.subtotal),
-                emphasis: "highlight",
-              },
+              highlightedField(
+                "Subtotal",
+                formatIdr(computed.mobilityCosts.personnelDeployment.subtotal)
+              ),
             ],
           },
           {
@@ -163,11 +170,10 @@ export async function GET(_: Request, context: RouteContext) {
                 label: "Tarif",
                 value: formatIdr(computed.mobilityCosts.equipmentHandling.unitRate),
               },
-              {
-                label: "Subtotal",
-                value: formatIdr(computed.mobilityCosts.equipmentHandling.subtotal),
-                emphasis: "highlight",
-              },
+              highlightedField(
+                "Subtotal",
+                formatIdr(computed.mobilityCosts.equipmentHandling.subtotal)
+              ),
             ],
           },
           ...computed.equipmentCosts.map((item, index) => ({
@@ -177,7 +183,7 @@ export async function GET(_: Request, context: RouteContext) {
               { label: "Qty", value: String(item.qty) },
               { label: "Freq", value: String(item.freq) },
               { label: "Tarif", value: formatIdr(item.unitRate) },
-              { label: "Subtotal", value: formatIdr(item.subtotal), emphasis: "highlight" },
+              highlightedField("Subtotal", formatIdr(item.subtotal)),
             ],
           })),
           ...computed.supportingCosts.map((item, index) => ({
@@ -189,7 +195,7 @@ export async function GET(_: Request, context: RouteContext) {
               { label: "Freq", value: String(item.freq) },
               { label: "Mode Harga", value: item.pricingMode },
               { label: "Tarif", value: formatIdr(item.unitRate) },
-              { label: "Subtotal", value: formatIdr(item.subtotal), emphasis: "highlight" },
+              highlightedField("Subtotal", formatIdr(item.subtotal)),
             ],
           })),
         ],
