@@ -86,7 +86,9 @@ function CostLineCard({
             type="text"
             inputMode="numeric"
             value={formatNumberInput(value.unitPrice)}
-            onChange={(event) => onChange("unitPrice", parseNullableNumberInput(event.target.value))}
+            onChange={(event) =>
+              onChange("unitPrice", parseNullableNumberInput(event.target.value))
+            }
           />
         </div>
       </div>

@@ -170,7 +170,9 @@ async function requestJson(path, options = {}) {
   const body = contentType.includes("application/json") && text ? JSON.parse(text) : text;
 
   if (!response.ok) {
-    throw new Error(`${options.method || "GET"} ${path} failed with ${response.status}: ${JSON.stringify(body)}`);
+    throw new Error(
+      `${options.method || "GET"} ${path} failed with ${response.status}: ${JSON.stringify(body)}`
+    );
   }
 
   return { response, body };
@@ -225,7 +227,9 @@ async function main() {
   });
   const createdRecord = createResult.body.data;
   console.log(`Created record: ${createdRecord.id}`);
-  console.log(`Direct cost subtotal: ${createdRecord.computed.summary.directCosts.directCostSubtotal}`);
+  console.log(
+    `Direct cost subtotal: ${createdRecord.computed.summary.directCosts.directCostSubtotal}`
+  );
   console.log(`Final rounded price: ${createdRecord.computed.summary.finalRoundedPrice}`);
 
   console.log("\n2. Requesting AI benchmark...");
@@ -268,14 +272,19 @@ async function main() {
   console.log("\n6. Requesting PDF export...");
   const pdfResponse = await fetch(`${baseUrl}/api/tender-calculations/${createdRecord.id}/pdf`);
   if (!pdfResponse.ok) {
-    throw new Error(`GET /api/tender-calculations/${createdRecord.id}/pdf failed with ${pdfResponse.status}`);
+    throw new Error(
+      `GET /api/tender-calculations/${createdRecord.id}/pdf failed with ${pdfResponse.status}`
+    );
   }
   console.log(`PDF content-type: ${pdfResponse.headers.get("content-type")}`);
 
   console.log("\n7. Duplicating record...");
-  const duplicateResult = await requestJson(`/api/tender-calculations/${createdRecord.id}/duplicate`, {
-    method: "POST",
-  });
+  const duplicateResult = await requestJson(
+    `/api/tender-calculations/${createdRecord.id}/duplicate`,
+    {
+      method: "POST",
+    }
+  );
   const duplicatedRecord = duplicateResult.body.data;
   console.log(`Duplicated record: ${duplicatedRecord.id}`);
 

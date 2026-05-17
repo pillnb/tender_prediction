@@ -184,10 +184,10 @@ export function EstimationSummary({
             </div>
 
             <div className="space-y-4 border-t border-dashed border-black/10 pt-6">
-              <div className="flex justify-between text-sm">   
-              </div>
+              <div className="flex justify-between text-sm"></div>
               <p className="text-on-surface-variant/80 text-center text-[10px] italic">
-                Rule-based output remains the primary pricing source. ML model benchmark is shown for comparison only.
+                Rule-based output remains the primary pricing source. ML model benchmark is shown
+                for comparison only.
               </p>
             </div>
           </div>
@@ -217,8 +217,7 @@ export function EstimationSummary({
         <div className="glass-card rounded-[2rem] p-6">
           <h4 className="text-on-surface text-lg font-bold">Cost Breakdown</h4>
           <p className="text-on-surface-variant mt-1 text-sm">
-            Breakdown komponen penjumlahan yang membentuk Subtotal I, Subtotal II,
-            dan Total akhir.
+            Breakdown komponen penjumlahan yang membentuk Subtotal I, Subtotal II, dan Total akhir.
           </p>
 
           <div className="mt-6 space-y-5">
@@ -313,8 +312,9 @@ export function EstimationSummary({
               </div>
               <p className="text-on-surface-variant mt-1 text-sm">
                 Benchmark ML ini memprediksi harga sebelum approval dari dua model SVR yang berbeda,
-                lalu dibandingkan dengan hasil rule-based calculator. 
-                SVR Project-Only hanya menggunakan parameter proyek, sementara SVR Hybrid menggunakan parameter proyek plus ringkasan biaya langsung sebagai input.
+                lalu dibandingkan dengan hasil rule-based calculator. SVR Project-Only hanya
+                menggunakan parameter proyek, sementara SVR Hybrid menggunakan parameter proyek plus
+                ringkasan biaya langsung sebagai input.
               </p>
             </div>
             <Button variant="outline" onClick={onRefreshPrediction} disabled={isPredicting}>

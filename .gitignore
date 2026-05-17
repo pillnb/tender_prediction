@@ -23,6 +23,7 @@
 # misc
 .DS_Store
 *.pem
+logobki.ico
 
 # debug
 npm-debug.log*

@@ -800,9 +800,12 @@ export function TenderDashboard() {
               <Sparkles className="h-4 w-4" />
               Rule-Based Parametric Calculator
             </div>
-            <h2 className="text-on-surface text-3xl font-bold">Perhitungan Harga Penawaran Tender</h2>
+            <h2 className="text-on-surface text-3xl font-bold">
+              Perhitungan Harga Penawaran Tender
+            </h2>
             <p className="text-on-surface-variant max-w-3xl text-sm">
-              Rule Based Calculator dibangun berdasarkan standar biaya INKINDO dan PMK 32/2025. Alur Perhitungan harga disesuaikan dengan proses bisnis tender PT BKI.
+              Rule Based Calculator dibangun berdasarkan standar biaya INKINDO dan PMK 32/2025. Alur
+              Perhitungan harga disesuaikan dengan proses bisnis tender PT BKI.
             </p>
           </div>
 
@@ -1080,13 +1083,17 @@ export function TenderDashboard() {
                   </div>
                 </div>
                 <div className="glass-card-strong rounded-[1.5rem] p-5">
-                  <div className="text-on-surface-variant text-xs uppercase">Supporting Subtotal</div>
+                  <div className="text-on-surface-variant text-xs uppercase">
+                    Supporting Subtotal
+                  </div>
                   <div className="text-on-surface mt-2 text-2xl font-bold">
                     {formatIdr(computed.summary.directCosts.supportingSubtotal)}
                   </div>
                 </div>
                 <div className="glass-card-strong rounded-[1.5rem] p-5">
-                  <div className="text-on-surface-variant text-xs uppercase">Direct Cost Subtotal</div>
+                  <div className="text-on-surface-variant text-xs uppercase">
+                    Direct Cost Subtotal
+                  </div>
                   <div className="text-primary mt-2 text-2xl font-bold">
                     {formatIdr(computed.summary.directCosts.directCostSubtotal)}
                   </div>

@@ -153,7 +153,7 @@ export function ArchivedTenderList({ records }: { records: TenderCalculationReco
                 <div className="flex flex-wrap gap-3">
                   <Link
                     href={`/?recordId=${record.id}`}
-                    className="bg-primary text-white inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold"
+                    className="bg-primary inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white"
                   >
                     <Pencil className="h-4 w-4" />
                     Open

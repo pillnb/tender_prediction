@@ -130,9 +130,13 @@ export function ProjectDescription({ value, onChange, errors }: ProjectDescripti
         <div className="space-y-1.5">
           <label className="font-label-sm text-on-surface-variant">Kategori Proyek</label>
           <Select
-            value={value.projectCategory ? getProjectCategoryLabel(value.projectCategory) : undefined}
+            value={
+              value.projectCategory ? getProjectCategoryLabel(value.projectCategory) : undefined
+            }
             onValueChange={(nextValue) => {
-              const selectedOption = projectCategoryOptions.find((option) => option.label === nextValue);
+              const selectedOption = projectCategoryOptions.find(
+                (option) => option.label === nextValue
+              );
               onChange(
                 "projectCategory",
                 (selectedOption?.value ?? "") as ProjectInfoInput["projectCategory"]
@@ -201,9 +205,13 @@ export function ProjectDescription({ value, onChange, errors }: ProjectDescripti
         <div className="space-y-1.5">
           <label className="font-label-sm text-on-surface-variant">Kategori Perusahaan</label>
           <Select
-            value={value.companyCategory ? getCompanyCategoryLabel(value.companyCategory) : undefined}
+            value={
+              value.companyCategory ? getCompanyCategoryLabel(value.companyCategory) : undefined
+            }
             onValueChange={(nextValue) => {
-              const selectedOption = companyCategoryOptions.find((option) => option.label === nextValue);
+              const selectedOption = companyCategoryOptions.find(
+                (option) => option.label === nextValue
+              );
               onChange(
                 "companyCategory",
                 (selectedOption?.value ?? "") as ProjectInfoInput["companyCategory"]
