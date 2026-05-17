@@ -11,8 +11,9 @@ import numpy as np
 import pandas as pd
 
 ARTIFACTS_DIR = Path(__file__).resolve().parents[1] / "artifacts"
-DEFAULT_DATASET_PATH = Path(__file__).resolve().parents[3] / "tender_fix.xlsx"
-DEFAULT_CLIENT_MAPPING_PATH = Path(__file__).resolve().parents[3] / "Mapping_Client_BKI_Fix.xlsx"
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_DATASET_PATH = PROJECT_ROOT / "tender_fix.xlsx"
+DEFAULT_CLIENT_MAPPING_PATH = PROJECT_ROOT / "Mapping_Client_BKI_Fix.xlsx"
 MODEL_VERSION = "svr-benchmark-v1"
 TARGET_NAME = "harga_sebelum_approval"
 
