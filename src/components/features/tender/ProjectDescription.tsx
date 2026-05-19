@@ -1,4 +1,4 @@
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -13,6 +13,8 @@ import type { CompanyCategory, ProjectCategory, ProjectInfoInput } from "@/types
 type ProjectDescriptionProps = {
   value: ProjectInfoInput;
   onChange: <K extends keyof ProjectInfoInput>(field: K, nextValue: ProjectInfoInput[K]) => void;
+  isProjectCategoryDetecting?: boolean;
+  projectCategoryHelperText?: string;
   errors?: Partial<Record<keyof ProjectInfoInput, string>>;
 };
 
@@ -101,7 +103,13 @@ function FieldError({ message }: { message?: string }) {
   return <p className="text-error text-xs">{message}</p>;
 }
 
-export function ProjectDescription({ value, onChange, errors }: ProjectDescriptionProps) {
+export function ProjectDescription({
+  value,
+  onChange,
+  isProjectCategoryDetecting = false,
+  projectCategoryHelperText,
+  errors,
+}: ProjectDescriptionProps) {
   return (
     <div className="glass-card col-span-12 rounded-[2rem] p-8 lg:col-span-8">
       <div className="mb-6 flex items-center gap-4">
@@ -124,10 +132,13 @@ export function ProjectDescription({ value, onChange, errors }: ProjectDescripti
             value={value.projectName}
             onChange={(event) => onChange("projectName", event.target.value)}
           />
-          <p className="text-on-surface-variant text-xs">
-            Kategori proyek akan terdeteksi otomatis dari nama pekerjaan, lalu tetap bisa kamu
-            ubah manual bila perlu.
-          </p>
+          <div className="text-on-surface-variant flex items-center gap-2 text-xs">
+            {isProjectCategoryDetecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+            <span>
+              {projectCategoryHelperText ??
+                "Kategori proyek akan terdeteksi otomatis dari nama pekerjaan, lalu tetap bisa kamu ubah manual bila perlu."}
+            </span>
+          </div>
           <FieldError message={errors?.projectName} />
         </div>
 

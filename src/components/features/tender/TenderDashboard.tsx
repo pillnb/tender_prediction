@@ -279,6 +279,10 @@ export function TenderDashboard() {
   const [isHydrating, setIsHydrating] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isPredicting, setIsPredicting] = useState(false);
+  const [isProjectCategoryDetecting, setIsProjectCategoryDetecting] = useState(false);
+  const [projectCategoryHelperText, setProjectCategoryHelperText] = useState(
+    "Kategori proyek akan terdeteksi otomatis dari nama pekerjaan, lalu tetap bisa kamu ubah manual bila perlu."
+  );
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [stepNotice, setStepNotice] = useState<string | null>(null);
 
@@ -288,11 +292,60 @@ export function TenderDashboard() {
       form.directCosts.projectInfo.projectCategory === ""
     ) {
       allowProjectCategoryAutofillRef.current = true;
+      setIsProjectCategoryDetecting(false);
+      setProjectCategoryHelperText(
+        "Kategori proyek akan terdeteksi otomatis dari nama pekerjaan, lalu tetap bisa kamu ubah manual bila perlu."
+      );
     }
   }, [
     form.directCosts.projectInfo.projectCategory,
     form.directCosts.projectInfo.projectName,
   ]);
+
+  useEffect(() => {
+    const projectName = form.directCosts.projectInfo.projectName.trim();
+
+    if (!allowProjectCategoryAutofillRef.current) {
+      return;
+    }
+
+    if (!projectName) {
+      setIsProjectCategoryDetecting(false);
+      setProjectCategoryHelperText(
+        "Kategori proyek akan terdeteksi otomatis dari nama pekerjaan, lalu tetap bisa kamu ubah manual bila perlu."
+      );
+      return;
+    }
+
+    setIsProjectCategoryDetecting(true);
+    setProjectCategoryHelperText("Mendeteksi kategori proyek dari nama pekerjaan...");
+
+    const timeoutId = window.setTimeout(() => {
+      const detectedCategory = inferProjectCategoryFromName(projectName);
+
+      setForm((current) => ({
+        ...current,
+        directCosts: {
+          ...current.directCosts,
+          projectInfo: {
+            ...current.directCosts.projectInfo,
+            projectCategory: detectedCategory,
+          },
+        },
+      }));
+
+      setIsProjectCategoryDetecting(false);
+      setProjectCategoryHelperText(
+        detectedCategory
+          ? "Kategori proyek berhasil terdeteksi otomatis. Kamu tetap bisa ubah manual bila perlu."
+          : "Kategori belum terdeteksi dari nama pekerjaan. Silakan pilih manual bila perlu."
+      );
+    }, 450);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [form.directCosts.projectInfo.projectName]);
 
   useEffect(() => {
     let isMounted = true;
@@ -557,25 +610,23 @@ export function TenderDashboard() {
   function setProjectInfo<K extends keyof ProjectInfoInput>(field: K, value: ProjectInfoInput[K]) {
     if (field === "projectCategory") {
       allowProjectCategoryAutofillRef.current = false;
+      setIsProjectCategoryDetecting(false);
+      setProjectCategoryHelperText(
+        value
+          ? "Kategori proyek sedang memakai pilihan manual."
+          : "Kategori proyek manual dikosongkan. Kosongkan nama pekerjaan untuk mengaktifkan auto-detect lagi."
+      );
     }
 
     setForm((current) => ({
       ...current,
-      directCosts: (() => {
-        const nextProjectInfo = {
+      directCosts: {
+        ...current.directCosts,
+        projectInfo: {
           ...current.directCosts.projectInfo,
           [field]: value,
-        };
-
-        if (field === "projectName" && allowProjectCategoryAutofillRef.current) {
-          nextProjectInfo.projectCategory = inferProjectCategoryFromName(String(value));
-        }
-
-        return {
-          ...current.directCosts,
-          projectInfo: nextProjectInfo,
-        };
-      })(),
+        },
+      },
     }));
   }
 
@@ -956,6 +1007,8 @@ export function TenderDashboard() {
                 <ProjectDescription
                   value={form.directCosts.projectInfo}
                   onChange={setProjectInfo}
+                  isProjectCategoryDetecting={isProjectCategoryDetecting}
+                  projectCategoryHelperText={projectCategoryHelperText}
                   errors={{
                     projectName: getFirstIssueMessage(visibleCurrentStepIssues, "projectName"),
                     projectCategory: getFirstIssueMessage(
