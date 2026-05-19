@@ -1,6 +1,6 @@
 {
   "model_key": "hybrid",
-  "display_name": "ML SVR Benchmark",
+  "display_name": "Hybrid Benchmark",
   "model_version": "ml-benchmark-validation-v3",
   "schema_version": "runtime-feature-schema-v3",
   "runtime_feature_keys": [
@@ -32,15 +32,15 @@
   "runtime_enabled": true,
   "validation_state": "limited",
   "validation_summary": "Model mengungguli baseline median, tetapi belum mengalahkan baseline estimasi langsung.",
-  "chosen_model_family": "svr_rbf",
+  "chosen_model_family": "linear_regression",
   "holdout_metrics": {
-    "mae": 4277080.201667481,
-    "rmse": 17992440.962608937,
-    "mape": 0.0849409644076864,
-    "r2": 0.8795292547723684,
-    "median_absolute_error": 831148.2342078863,
-    "within_10pct_ratio": 0.7692307692307693,
-    "within_20pct_ratio": 0.875,
-    "within_30pct_ratio": 0.9230769230769231
+    "mae": 858625.1715920189,
+    "rmse": 3083112.9421888697,
+    "mape": 0.02766533562007387,
+    "r2": 0.9964626315920831,
+    "median_absolute_error": 136130.881264559,
+    "within_10pct_ratio": 0.9230769230769231,
+    "within_20pct_ratio": 0.9615384615384616,
+    "within_30pct_ratio": 0.9711538461538461
   }
 }

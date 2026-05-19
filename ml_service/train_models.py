@@ -168,8 +168,8 @@ def build_parameter_grid(search_space: dict[str, list[Any]]) -> list[dict[str, A
     return [dict(zip(keys, values, strict=True)) for values in combinations]
 
 
-def candidate_specs(model_key: str) -> dict[str, dict[str, Any]]:
-    all_specs = {
+def candidate_specs() -> dict[str, dict[str, Any]]:
+    return {
         "linear_regression": {
             "factory": lambda _params: LinearRegression(),
             "parameter_grid": [{}],
@@ -221,14 +221,6 @@ def candidate_specs(model_key: str) -> dict[str, dict[str, Any]]:
             ),
         },
     }
-
-    if model_key == "hybrid":
-        return {
-            "svr_linear": all_specs["svr_linear"],
-            "svr_rbf": all_specs["svr_rbf"],
-        }
-
-    return all_specs
 
 
 def build_pipeline(model_key: str, estimator: Any) -> Pipeline:
@@ -543,7 +535,7 @@ def train_model_family(
             X_holdout=X_holdout,
             y_holdout_raw=y_holdout_raw,
         )
-        for candidate_name, candidate_spec in candidate_specs(model_key).items()
+        for candidate_name, candidate_spec in candidate_specs().items()
     ]
 
     best_candidate = choose_best_candidate(candidate_results)
@@ -557,16 +549,12 @@ def train_model_family(
 
     final_pipeline = build_pipeline(
         model_key,
-        candidate_specs(model_key)[best_candidate["candidate_name"]]["factory"](
-            best_candidate["best_params"]
-        ),
+        candidate_specs()[best_candidate["candidate_name"]]["factory"](best_candidate["best_params"]),
     )
     final_pipeline.fit(X.loc[full_training_mask], y_log.loc[full_training_mask])
     holdout_pipeline = build_pipeline(
         model_key,
-        candidate_specs(model_key)[best_candidate["candidate_name"]]["factory"](
-            best_candidate["best_params"]
-        ),
+        candidate_specs()[best_candidate["candidate_name"]]["factory"](best_candidate["best_params"]),
     )
     holdout_train_mask = build_outlier_mask(model_key, X_train, y_train_log)
     holdout_pipeline.fit(X_train.loc[holdout_train_mask], y_train_log.loc[holdout_train_mask])
