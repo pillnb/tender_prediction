@@ -10,21 +10,49 @@ export type CompanyDirectorySuggestion = {
 };
 
 function normalizeCompanyName(value: string) {
-  return value.trim().toLowerCase().replace(/\s+/g, " ");
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ");
+}
+
+function buildCompanySearchClauses(query: string) {
+  const tokens = normalizeCompanyName(query)
+    .split(" ")
+    .map((token) => token.trim())
+    .filter(Boolean);
+
+  if (tokens.length === 0) {
+    return [];
+  }
+
+  return tokens.map((token) => ({
+    companyName: {
+      contains: token,
+      mode: "insensitive" as const,
+    },
+  }));
 }
 
 async function searchTenderCalculationCompanies(query: string) {
   const trimmed = query.trim();
   const normalized = normalizeCompanyName(trimmed);
+  const tokenClauses = buildCompanySearchClauses(trimmed);
+
+  if (tokenClauses.length === 0) {
+    return {
+      suggestions: [] as CompanyDirectorySuggestion[],
+      exactMatch: null as CompanyDirectorySuggestion | null,
+    };
+  }
+
   const rows = await companyPrisma.tenderCalculation.findMany({
     where: {
-      companyName: {
-        contains: trimmed,
-        mode: "insensitive",
-      },
+      AND: tokenClauses,
     },
     orderBy: [{ updatedAt: "desc" }],
-    take: 20,
+    take: 50,
     select: {
       companyName: true,
       companyCategory: true,
@@ -65,8 +93,9 @@ async function searchTenderCalculationCompanies(query: string) {
 
 export async function searchCompanyDirectory(query: string) {
   const trimmed = query.trim();
+  const tokenClauses = buildCompanySearchClauses(trimmed);
 
-  if (!trimmed) {
+  if (!trimmed || tokenClauses.length === 0) {
     return {
       suggestions: [] as CompanyDirectorySuggestion[],
       exactMatch: null as CompanyDirectorySuggestion | null,
@@ -78,10 +107,7 @@ export async function searchCompanyDirectory(query: string) {
     const [suggestions, exactMatch] = await Promise.all([
       companyPrisma.companyDirectory.findMany({
         where: {
-          companyName: {
-            contains: trimmed,
-            mode: "insensitive",
-          },
+          AND: tokenClauses,
         },
         orderBy: [{ companyName: "asc" }],
         take: 8,
@@ -102,10 +128,18 @@ export async function searchCompanyDirectory(query: string) {
         },
       }),
     ]);
+    const fallbackResult =
+      suggestions.length > 0 || exactMatch
+        ? null
+        : await searchTenderCalculationCompanies(trimmed);
 
     return {
-      suggestions: suggestions as CompanyDirectorySuggestion[],
-      exactMatch: (exactMatch as CompanyDirectorySuggestion | null) ?? null,
+      suggestions:
+        suggestions.length > 0
+          ? (suggestions as CompanyDirectorySuggestion[])
+          : fallbackResult?.suggestions ?? [],
+      exactMatch:
+        (exactMatch as CompanyDirectorySuggestion | null) ?? fallbackResult?.exactMatch ?? null,
     };
   } catch {
     return searchTenderCalculationCompanies(trimmed);
