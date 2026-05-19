@@ -28,6 +28,10 @@ export type CompanyDirectorySuggestion = {
   source: string;
 };
 
+type CompanyWorkbookRow = CompanyDirectorySuggestion & {
+  normalizedName: string;
+};
+
 function normalizeCompanyName(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
 }
@@ -75,6 +79,31 @@ function loadCompanyRowsFromWorkbook() {
     .filter((row): row is NonNullable<typeof row> => Boolean(row));
 }
 
+function searchWorkbookCompanies(query: string) {
+  const trimmed = query.trim();
+
+  if (!trimmed) {
+    return {
+      suggestions: [] as CompanyDirectorySuggestion[],
+      exactMatch: null as CompanyDirectorySuggestion | null,
+    };
+  }
+
+  const normalized = normalizeCompanyName(trimmed);
+  const rows = loadCompanyRowsFromWorkbook();
+  const matchingRows = rows
+    .filter((row) => row.companyName.toLowerCase().includes(trimmed.toLowerCase()))
+    .slice(0, 8);
+  const exactMatch = rows.find((row) => row.normalizedName === normalized) ?? null;
+
+  return {
+    suggestions: matchingRows.map(({ normalizedName: _normalizedName, ...row }) => row),
+    exactMatch: exactMatch
+      ? (({ normalizedName: _normalizedName, ...row }) => row)(exactMatch)
+      : null,
+  };
+}
+
 export async function ensureCompanyDirectorySeeded() {
   const existingCount = await companyPrisma.companyDirectory.count();
 
@@ -95,8 +124,6 @@ export async function ensureCompanyDirectorySeeded() {
 }
 
 export async function searchCompanyDirectory(query: string) {
-  await ensureCompanyDirectorySeeded();
-
   const trimmed = query.trim();
 
   if (!trimmed) {
@@ -106,39 +133,45 @@ export async function searchCompanyDirectory(query: string) {
     };
   }
 
-  const normalized = normalizeCompanyName(trimmed);
-  const [suggestions, exactMatch] = await Promise.all([
-    companyPrisma.companyDirectory.findMany({
-      where: {
-        companyName: {
-          contains: trimmed,
-          mode: "insensitive",
-        },
-      },
-      orderBy: [{ companyName: "asc" }],
-      take: 8,
-      select: {
-        companyName: true,
-        companyCategory: true,
-        source: true,
-      },
-    }),
-    companyPrisma.companyDirectory.findUnique({
-      where: {
-        normalizedName: normalized,
-      },
-      select: {
-        companyName: true,
-        companyCategory: true,
-        source: true,
-      },
-    }),
-  ]);
+  try {
+    await ensureCompanyDirectorySeeded();
 
-  return {
-    suggestions: suggestions as CompanyDirectorySuggestion[],
-    exactMatch: (exactMatch as CompanyDirectorySuggestion | null) ?? null,
-  };
+    const normalized = normalizeCompanyName(trimmed);
+    const [suggestions, exactMatch] = await Promise.all([
+      companyPrisma.companyDirectory.findMany({
+        where: {
+          companyName: {
+            contains: trimmed,
+            mode: "insensitive",
+          },
+        },
+        orderBy: [{ companyName: "asc" }],
+        take: 8,
+        select: {
+          companyName: true,
+          companyCategory: true,
+          source: true,
+        },
+      }),
+      companyPrisma.companyDirectory.findUnique({
+        where: {
+          normalizedName: normalized,
+        },
+        select: {
+          companyName: true,
+          companyCategory: true,
+          source: true,
+        },
+      }),
+    ]);
+
+    return {
+      suggestions: suggestions as CompanyDirectorySuggestion[],
+      exactMatch: (exactMatch as CompanyDirectorySuggestion | null) ?? null,
+    };
+  } catch {
+    return searchWorkbookCompanies(trimmed);
+  }
 }
 
 export async function upsertCompanyDirectoryEntry(
