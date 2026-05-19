@@ -22,7 +22,7 @@ FEATURE_SCHEMA_VERSION = "runtime-feature-schema-v3"
 
 MODEL_DISPLAY_NAMES = {
     "project_only": "Project-Only Benchmark",
-    "hybrid": "Hybrid Benchmark",
+    "hybrid": "ML SVR Benchmark",
 }
 
 MODEL_FEATURE_SPECS: dict[str, dict[str, Any]] = {

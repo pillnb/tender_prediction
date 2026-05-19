@@ -13,7 +13,7 @@ function readJson(relativePath: string) {
   return JSON.parse(readFileSync(fullPath, "utf-8")) as Record<string, unknown>;
 }
 
-test("project-only artifact exposes a production-valid runtime contract", () => {
+test("project-only artifact remains available internally for historical evaluation", () => {
   const contract = readJson("ml_service/artifacts/project_only_feature_contract.json");
 
   assert.equal(contract.model_key, "project_only");
@@ -124,8 +124,8 @@ test("website benchmark payload only sends runtime fields used by the current ML
     computed.summary.subtotalBeforeProfit
   );
 
-  assert.equal(payload.requestedModels.includes("project_only"), true);
   assert.equal(payload.requestedModels.includes("hybrid"), true);
+  assert.equal(payload.requestedModels.includes("project_only"), false);
   assert.equal(typeof payload.ruleBasedSummary.ruleBasedEstimateBeforeApproval, "number");
   assert.equal("totalDurationDays" in payload, false);
   assert.deepEqual(Object.keys(payload.ruleBasedSummary), ["ruleBasedEstimateBeforeApproval"]);

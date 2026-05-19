@@ -397,7 +397,7 @@ export function createSvrPredictionPayload(
     ruleBasedSummary: {
       ruleBasedEstimateBeforeApproval: finalPriceBeforeRounding,
     },
-    requestedModels: ["project_only", "hybrid"],
+    requestedModels: ["hybrid"],
   };
 }
 
@@ -466,12 +466,12 @@ export function createIdleSvrPrediction(payload: SvrPredictionRequestPayload): S
       modelKey: "hybrid",
       predictedPrice: null,
       currency: "IDR",
-      modelName: "Hybrid Benchmark",
+      modelName: "ML SVR Benchmark",
       modelVersion: null,
       status: "idle",
       validationState: "limited",
       validationSummary:
-        "Benchmark hybrid sangat kuat terhadap baseline median, tetapi belum mengalahkan estimasi langsung.",
+        "Benchmark SVR memakai estimasi harga runtime sebagai input utama.",
     },
     bestAvailable: null,
     modelVersions: {},

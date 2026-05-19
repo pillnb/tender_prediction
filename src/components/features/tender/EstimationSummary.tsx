@@ -105,10 +105,6 @@ export function EstimationSummary({
   onRefreshPrediction,
 }: EstimationSummaryProps) {
   const { summary, aiBenchmark } = computed;
-  const projectOnlyVariance =
-    aiBenchmark.projectOnly.predictedPrice === null
-      ? null
-      : summary.finalRoundedPrice - aiBenchmark.projectOnly.predictedPrice;
   const hybridVariance =
     aiBenchmark.hybrid.predictedPrice === null
       ? null
@@ -324,10 +320,8 @@ export function EstimationSummary({
                 </h4>
               </div>
               <p className="text-on-surface-variant mt-1 text-sm">
-                Rule-based calculator tetap menjadi sumber harga utama. Benchmark ML hanya untuk
-                pembanding. Hybrid benchmark sekarang memakai estimasi harga runtime yang
-                disejajarkan dengan kolom Harga historis, sedangkan project-only tetap tersedia
-                sebagai baseline yang lebih konservatif.
+                Rule-based calculator tetap menjadi sumber harga utama. Benchmark ML di bawah ini
+                menggunakan model SVR dengan estimasi harga runtime sebagai input utama.
               </p>
             </div>
             <Button variant="outline" onClick={onRefreshPrediction} disabled={isPredicting}>
@@ -338,25 +332,6 @@ export function EstimationSummary({
 
           <div className="bg-surface-container-low mt-6 space-y-3 rounded-[1.5rem] p-5">
             <SummaryRow label="Rule-Based Price" value={formatIdr(summary.finalRoundedPrice)} />
-            <SummaryRow
-              label={aiBenchmark.projectOnly.modelName}
-              value={
-                aiBenchmark.projectOnly.predictedPrice === null
-                  ? aiBenchmark.projectOnly.status === "error"
-                    ? "Prediction failed"
-                    : "Waiting for prediction"
-                  : formatIdr(aiBenchmark.projectOnly.predictedPrice)
-              }
-            />
-            <SummaryRow
-              label="Project-Only Validation"
-              value={formatValidationState(aiBenchmark.projectOnly.validationState)}
-            />
-            <SummaryRow
-              label="Variance Project-Only"
-              value={projectOnlyVariance === null ? "-" : formatIdr(projectOnlyVariance)}
-              emphasized
-            />
             <SummaryRow
               label={aiBenchmark.hybrid.modelName}
               value={
@@ -393,25 +368,18 @@ export function EstimationSummary({
                   aiBenchmark.payload.ruleBasedSummary.ruleBasedEstimateBeforeApproval
                 )}
               />
-              <SummaryRow label="Best Available Model" value={aiBenchmark.bestAvailable ?? "-"} />
             </div>
-            {aiBenchmark.projectOnly.validationSummary || aiBenchmark.hybrid.validationSummary ? (
+            {aiBenchmark.hybrid.validationSummary ? (
               <div className="text-on-surface-variant mt-4 space-y-2 text-sm">
-                {aiBenchmark.projectOnly.validationSummary ? (
-                  <div>Project-Only validation: {aiBenchmark.projectOnly.validationSummary}</div>
-                ) : null}
                 {aiBenchmark.hybrid.validationSummary ? (
-                  <div>Hybrid validation: {aiBenchmark.hybrid.validationSummary}</div>
+                  <div>SVR validation: {aiBenchmark.hybrid.validationSummary}</div>
                 ) : null}
               </div>
             ) : null}
-            {aiBenchmark.projectOnly.errorMessage || aiBenchmark.hybrid.errorMessage ? (
+            {aiBenchmark.hybrid.errorMessage ? (
               <div className="text-error mt-4 space-y-1 text-sm">
-                {aiBenchmark.projectOnly.errorMessage ? (
-                  <div>Project-Only: {aiBenchmark.projectOnly.errorMessage}</div>
-                ) : null}
                 {aiBenchmark.hybrid.errorMessage ? (
-                  <div>Hybrid: {aiBenchmark.hybrid.errorMessage}</div>
+                  <div>SVR: {aiBenchmark.hybrid.errorMessage}</div>
                 ) : null}
               </div>
             ) : null}
