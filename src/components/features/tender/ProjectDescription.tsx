@@ -87,6 +87,10 @@ const companyCategoryOptions: Array<{ value: CompanyCategory; label: string }> =
   { value: "lain-lain", label: "Lain-Lain" },
 ];
 
+function getProjectCategoryLabel(value: ProjectCategory | "") {
+  return projectCategoryOptions.find((option) => option.value === value)?.label ?? "";
+}
+
 function getCompanyCategoryLabel(value: CompanyCategory | "") {
   return companyCategoryOptions.find((option) => option.value === value)?.label ?? "";
 }
@@ -152,7 +156,9 @@ export function ProjectDescription({
                 errors?.projectCategory ? "border-error" : ""
               )}
             >
-              <SelectValue placeholder="Pilih Kategori Proyek" />
+              <SelectValue placeholder="Pilih Kategori Proyek">
+                {value.projectCategory ? getProjectCategoryLabel(value.projectCategory) : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {projectCategoryOptions.map((option) => (
