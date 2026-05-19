@@ -124,6 +124,10 @@ export function ProjectDescription({ value, onChange, errors }: ProjectDescripti
             value={value.projectName}
             onChange={(event) => onChange("projectName", event.target.value)}
           />
+          <p className="text-on-surface-variant text-xs">
+            Kategori proyek akan terdeteksi otomatis dari nama pekerjaan, lalu tetap bisa kamu
+            ubah manual bila perlu.
+          </p>
           <FieldError message={errors?.projectName} />
         </div>
 

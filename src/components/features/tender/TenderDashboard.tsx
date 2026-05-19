@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   AlertCircle,
@@ -19,6 +19,7 @@ import { ProjectDescription } from "@/components/features/tender/ProjectDescript
 import { TaxMarginConfig } from "@/components/features/tender/TaxMarginConfig";
 import { Button } from "@/components/ui/button";
 import { formatIdr } from "@/lib/currency";
+import { inferProjectCategoryFromName } from "@/lib/projectCategoryClassifier";
 import {
   calculateTenderWizardComputedState,
   createEmptyEquipmentItem,
@@ -265,6 +266,7 @@ function SectionStatusCard({
 export function TenderDashboard() {
   const searchParams = useSearchParams();
   const selectedRecordId = searchParams.get("recordId");
+  const allowProjectCategoryAutofillRef = useRef(true);
   const [form, setForm] = useState<TenderWizardFormData>(() => createEmptyTenderFormData());
   const [latestDraft, setLatestDraft] = useState<TenderCalculationRecord | null>(null);
   const [localRecovery, setLocalRecovery] = useState<LocalDraftSnapshot | null>(null);
@@ -279,6 +281,18 @@ export function TenderDashboard() {
   const [isPredicting, setIsPredicting] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [stepNotice, setStepNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (
+      form.directCosts.projectInfo.projectName === "" &&
+      form.directCosts.projectInfo.projectCategory === ""
+    ) {
+      allowProjectCategoryAutofillRef.current = true;
+    }
+  }, [
+    form.directCosts.projectInfo.projectCategory,
+    form.directCosts.projectInfo.projectName,
+  ]);
 
   useEffect(() => {
     let isMounted = true;
@@ -541,15 +555,27 @@ export function TenderDashboard() {
   }
 
   function setProjectInfo<K extends keyof ProjectInfoInput>(field: K, value: ProjectInfoInput[K]) {
+    if (field === "projectCategory") {
+      allowProjectCategoryAutofillRef.current = false;
+    }
+
     setForm((current) => ({
       ...current,
-      directCosts: {
-        ...current.directCosts,
-        projectInfo: {
+      directCosts: (() => {
+        const nextProjectInfo = {
           ...current.directCosts.projectInfo,
           [field]: value,
-        },
-      },
+        };
+
+        if (field === "projectName" && allowProjectCategoryAutofillRef.current) {
+          nextProjectInfo.projectCategory = inferProjectCategoryFromName(String(value));
+        }
+
+        return {
+          ...current.directCosts,
+          projectInfo: nextProjectInfo,
+        };
+      })(),
     }));
   }
 
