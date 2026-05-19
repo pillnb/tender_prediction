@@ -87,10 +87,6 @@ const companyCategoryOptions: Array<{ value: CompanyCategory; label: string }> =
   { value: "lain-lain", label: "Lain-Lain" },
 ];
 
-function getProjectCategoryLabel(value: ProjectCategory | "") {
-  return projectCategoryOptions.find((option) => option.value === value)?.label ?? "";
-}
-
 function getCompanyCategoryLabel(value: CompanyCategory | "") {
   return companyCategoryOptions.find((option) => option.value === value)?.label ?? "";
 }
@@ -145,18 +141,10 @@ export function ProjectDescription({
         <div className="space-y-1.5">
           <label className="font-label-sm text-on-surface-variant">Kategori Proyek</label>
           <Select
-            value={
-              value.projectCategory ? getProjectCategoryLabel(value.projectCategory) : undefined
+            value={value.projectCategory || undefined}
+            onValueChange={(nextValue) =>
+              onChange("projectCategory", nextValue as ProjectInfoInput["projectCategory"])
             }
-            onValueChange={(nextValue) => {
-              const selectedOption = projectCategoryOptions.find(
-                (option) => option.label === nextValue
-              );
-              onChange(
-                "projectCategory",
-                (selectedOption?.value ?? "") as ProjectInfoInput["projectCategory"]
-              );
-            }}
           >
             <SelectTrigger
               className={cn(
@@ -168,7 +156,7 @@ export function ProjectDescription({
             </SelectTrigger>
             <SelectContent>
               {projectCategoryOptions.map((option) => (
-                <SelectItem key={option.value} value={option.label}>
+                <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
               ))}
