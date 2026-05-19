@@ -333,7 +333,7 @@ export function EstimationSummary({
           <div className="bg-surface-container-low mt-6 space-y-3 rounded-[1.5rem] p-5">
             <SummaryRow label="Rule-Based Price" value={formatIdr(summary.finalRoundedPrice)} />
             <SummaryRow
-              label={aiBenchmark.hybrid.modelName}
+              label="ML Benchmark"
               value={
                 aiBenchmark.hybrid.predictedPrice === null
                   ? aiBenchmark.hybrid.status === "error"
@@ -343,11 +343,11 @@ export function EstimationSummary({
               }
             />
             <SummaryRow
-              label="Hybrid Validation"
+              label="ML Validation"
               value={formatValidationState(aiBenchmark.hybrid.validationState)}
             />
             <SummaryRow
-              label="Variance Hybrid"
+              label="Variance ML"
               value={hybridVariance === null ? "-" : formatIdr(hybridVariance)}
               emphasized
             />
@@ -372,14 +372,14 @@ export function EstimationSummary({
             {aiBenchmark.hybrid.validationSummary ? (
               <div className="text-on-surface-variant mt-4 space-y-2 text-sm">
                 {aiBenchmark.hybrid.validationSummary ? (
-                  <div>SVR validation: {aiBenchmark.hybrid.validationSummary}</div>
+                  <div>ML validation: {aiBenchmark.hybrid.validationSummary}</div>
                 ) : null}
               </div>
             ) : null}
             {aiBenchmark.hybrid.errorMessage ? (
               <div className="text-error mt-4 space-y-1 text-sm">
                 {aiBenchmark.hybrid.errorMessage ? (
-                  <div>SVR: {aiBenchmark.hybrid.errorMessage}</div>
+                  <div>ML: {aiBenchmark.hybrid.errorMessage}</div>
                 ) : null}
               </div>
             ) : null}
