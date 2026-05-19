@@ -1,0 +1,56 @@
+{
+  "dataset_version": "0cad5f023c7b3a939d19ed08b63b64f83ee935804db0234edb576077a5745dae",
+  "client_mapping_version": "69df401608b5f6000eca422ceda002736edd65738d2c65cc12ac0c183a72349a",
+  "dataset_path": "C:\\Users\\vasky\\Downloads\\TA_Vaskya\\website_kalkulator\\tender_fix.xlsx",
+  "client_mapping_path": "C:\\Users\\vasky\\Downloads\\TA_Vaskya\\website_kalkulator\\Mapping_Client_BKI_Fix.xlsx",
+  "raw_rows": 2430,
+  "required_field_rows": 564,
+  "numeric_clean_rows": 525,
+  "final_rows": 519,
+  "kept_ratio": 0.21358024691358024,
+  "drop_summary": {
+    "missing_required_fields": 1866,
+    "invalid_numeric_target": 39,
+    "invalid_offer_date": 6
+  },
+  "target_distribution": {
+    "before_cleaning": {
+      "count": 533,
+      "min": 650000.0,
+      "p25": 10000000.0,
+      "median": 18100000.0,
+      "mean": 37477382.018761724,
+      "p75": 35000000.0,
+      "max": 819000000.0
+    },
+    "after_cleaning": {
+      "count": 519,
+      "min": 650000.0,
+      "p25": 10000000.0,
+      "median": 18500000.0,
+      "mean": 36264392.32369942,
+      "p75": 35000000.0,
+      "max": 819000000.0
+    }
+  },
+  "label_quality": {
+    "duplicate_candidate_rows": 14,
+    "invalid_offer_date_rows": 6,
+    "outlier_threshold": 72500000.0,
+    "outlier_count": 41
+  },
+  "leakage_audit": {
+    "exact_same_price_count": 340,
+    "exact_same_price_ratio": 0.6551059730250481,
+    "within_one_percent_ratio": 0.6628131021194605,
+    "target_delta_summary": {
+      "count": 519,
+      "min": 0.0,
+      "p25": 0.0,
+      "median": 0.0,
+      "mean": 17490720.331406552,
+      "p75": 1071917.0,
+      "max": 4263000000.0
+    }
+  }
+}

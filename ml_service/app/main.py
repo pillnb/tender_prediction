@@ -8,23 +8,20 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from .core import (
+    MODEL_DISPLAY_NAMES,
     MODEL_VERSION,
     TARGET_NAME,
+    build_runtime_feature_payload,
     classify_project,
     create_inference_frame,
     infer_client_type,
     load_client_mapping,
     load_model_artifacts,
-    align_features,
+    load_model_contract,
 )
 
 
 class RuleBasedSummaryPayload(BaseModel):
-    totalPersonnel: int = Field(ge=0)
-    directCostSubtotal: float = Field(ge=0)
-    subtotalBeforeProfit: float = Field(ge=0)
-    finalPriceBeforeRounding: float = Field(ge=0)
-    finalRoundedPrice: float = Field(ge=0)
     ruleBasedEstimateBeforeApproval: float = Field(ge=0)
 
 
@@ -35,12 +32,11 @@ class PredictBenchmarkPayload(BaseModel):
     projectLocation: str
     projectCategory: str
     workDate: str
-    totalDurationDays: int = Field(ge=0)
     ruleBasedSummary: RuleBasedSummaryPayload
     requestedModels: list[Literal["project_only", "hybrid"]]
 
 
-app = FastAPI(title="PT BKI SVR Benchmark Service", version=MODEL_VERSION)
+app = FastAPI(title="PT BKI Tender Price Benchmark Service", version=MODEL_VERSION)
 
 
 @app.get("/health")
@@ -63,20 +59,7 @@ def predict_benchmark(payload: PredictBenchmarkPayload) -> dict[str, Any]:
         payload.companyCategory,
         client_mapping,
     )
-
-    feature_snapshot = {
-        "projectName": payload.projectName,
-        "companyName": payload.companyName,
-        "companyCategory": payload.companyCategory,
-        "typeOfClient": type_of_client,
-        "projectCategory": payload.projectCategory,
-        "typeOfProject": type_of_project,
-        "projectLocation": payload.projectLocation,
-        "workDate": payload.workDate,
-        "totalDurationDays": payload.totalDurationDays,
-        "totalPersonnel": payload.ruleBasedSummary.totalPersonnel,
-        "ruleBasedEstimateBeforeApproval": payload.ruleBasedSummary.ruleBasedEstimateBeforeApproval,
-    }
+    runtime_features = build_runtime_feature_payload(payload, type_of_client, type_of_project)
 
     response: dict[str, Any] = {
         "targetName": TARGET_NAME,
@@ -84,66 +67,86 @@ def predict_benchmark(payload: PredictBenchmarkPayload) -> dict[str, Any]:
         "requestedAt": requested_at,
         "respondedAt": datetime.utcnow().isoformat(),
         "projectOnly": {
-          "modelKey": "project_only",
-          "predictedPrice": None,
-          "currency": "IDR",
-          "modelName": "SVR Project-Only",
-          "modelVersion": None,
-          "status": "idle",
+            "modelKey": "project_only",
+            "predictedPrice": None,
+            "currency": "IDR",
+            "modelName": MODEL_DISPLAY_NAMES["project_only"],
+            "modelVersion": None,
+            "status": "idle",
+            "validationState": "limited",
+            "validationSummary": "Model belum dievaluasi untuk runtime saat service dimuat.",
         },
         "hybrid": {
-          "modelKey": "hybrid",
-          "predictedPrice": None,
-          "currency": "IDR",
-          "modelName": "SVR Hybrid",
-          "modelVersion": None,
-          "status": "idle",
+            "modelKey": "hybrid",
+            "predictedPrice": None,
+            "currency": "IDR",
+            "modelName": MODEL_DISPLAY_NAMES["hybrid"],
+            "modelVersion": None,
+            "status": "idle",
+            "validationState": "blocked",
+            "validationSummary": "Model hybrid belum divalidasi untuk runtime.",
         },
         "bestAvailable": None,
         "modelVersions": {},
-        "featureSnapshot": feature_snapshot,
+        "featureSnapshot": {
+            "projectName": payload.projectName,
+            "companyName": payload.companyName,
+            "companyCategory": payload.companyCategory,
+            "typeOfClient": type_of_client,
+            "projectCategory": payload.projectCategory,
+            "typeOfProject": type_of_project,
+            "projectLocation": payload.projectLocation,
+            "workDate": payload.workDate,
+            "ruleBasedEstimateBeforeApproval": payload.ruleBasedSummary.ruleBasedEstimateBeforeApproval,
+        },
         "errors": {},
     }
 
-    model_payload = {
-        "workDate": payload.workDate,
-        "typeOfClient": type_of_client,
-        "typeOfProject": type_of_project,
-        "ruleBasedEstimateBeforeApproval": payload.ruleBasedSummary.ruleBasedEstimateBeforeApproval,
-    }
-
     for model_key in payload.requestedModels:
-        include_harga_log = model_key == "hybrid"
-        model_name = "SVR Hybrid" if include_harga_log else "SVR Project-Only"
-        target_field = "hybrid" if include_harga_log else "projectOnly"
+        target_field = "hybrid" if model_key == "hybrid" else "projectOnly"
+        contract: dict[str, Any] | None = None
 
         try:
+            contract = load_model_contract(model_key)
             artifacts = load_model_artifacts(model_key)
-            inference_frame = create_inference_frame(model_payload, include_harga_log)
-            aligned_frame = align_features(inference_frame, artifacts.feature_columns)
-            prediction = artifacts.model.predict(aligned_frame)[0]
+            inference_frame = create_inference_frame(runtime_features, artifacts.contract)
+            prediction = artifacts.model.predict(inference_frame)[0]
             prediction_price = float(np.expm1(prediction))
+
+            print(
+                f"[ml-benchmark] model={model_key} family={artifacts.contract.get('chosen_model_family')} "
+                f"validation={artifacts.contract.get('validation_state')} version={artifacts.metadata.get('model_version')}"
+            )
 
             response[target_field] = {
                 "modelKey": model_key,
                 "predictedPrice": round(prediction_price),
                 "currency": "IDR",
-                "modelName": model_name,
+                "modelName": contract.get("display_name", MODEL_DISPLAY_NAMES[model_key]),
                 "modelVersion": artifacts.metadata.get("model_version"),
                 "status": "success",
+                "validationState": contract.get("validation_state"),
+                "validationSummary": contract.get("validation_summary"),
                 "requestedAt": requested_at,
                 "respondedAt": datetime.utcnow().isoformat(),
                 "errorMessage": None,
             }
             response["modelVersions"][model_key] = artifacts.metadata.get("model_version")
         except Exception as error:
+            print(f"[ml-benchmark] model={model_key} status=error reason={error}")
             response[target_field] = {
                 "modelKey": model_key,
                 "predictedPrice": None,
                 "currency": "IDR",
-                "modelName": model_name,
-                "modelVersion": None,
+                "modelName": (
+                    contract.get("display_name", MODEL_DISPLAY_NAMES[model_key])
+                    if contract
+                    else MODEL_DISPLAY_NAMES[model_key]
+                ),
+                "modelVersion": contract.get("model_version") if contract else None,
                 "status": "error",
+                "validationState": contract.get("validation_state") if contract else "blocked",
+                "validationSummary": contract.get("validation_summary") if contract else str(error),
                 "requestedAt": requested_at,
                 "respondedAt": datetime.utcnow().isoformat(),
                 "errorMessage": str(error),

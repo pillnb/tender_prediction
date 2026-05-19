@@ -92,6 +92,7 @@ export type RuleLookupStatus = "idle" | "loading" | "resolved" | "fallback" | "e
 
 export type SvrPredictionStatus = "idle" | "loading" | "success" | "error";
 export type BenchmarkModelKey = "project_only" | "hybrid";
+export type ModelValidationState = "production_ready" | "limited" | "blocked";
 
 export type RuleLookupAudit = {
   source: RateSource;
@@ -244,11 +245,6 @@ export type ProfitAndCglStepInput = {
 };
 
 export type RuleBasedBenchmarkInput = {
-  totalPersonnel: number;
-  directCostSubtotal: CurrencyAmount;
-  subtotalBeforeProfit: CurrencyAmount;
-  finalPriceBeforeRounding: CurrencyAmount;
-  finalRoundedPrice: CurrencyAmount;
   ruleBasedEstimateBeforeApproval: CurrencyAmount;
 };
 
@@ -259,7 +255,6 @@ export type SvrPredictionRequestPayload = {
   projectLocation: string;
   projectCategory: ProjectCategory;
   workDate: ISODateString;
-  totalDurationDays: number;
   ruleBasedSummary: RuleBasedBenchmarkInput;
   requestedModels: BenchmarkModelKey[];
 };
@@ -271,6 +266,8 @@ export type SvrSinglePredictionResult = {
   modelName: string;
   modelVersion?: string | null;
   status: SvrPredictionStatus;
+  validationState?: ModelValidationState | null;
+  validationSummary?: string | null;
   requestedAt?: string | null;
   respondedAt?: string | null;
   errorMessage?: string | null;

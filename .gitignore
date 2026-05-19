@@ -24,6 +24,8 @@
 .DS_Store
 *.pem
 logobki.ico
+__pycache__/
+*.pyc
 
 # debug
 npm-debug.log*

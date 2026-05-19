@@ -1,6 +1,6 @@
 # ML Service
 
-FastAPI sidecar untuk benchmark `AI Price Prediction Benchmark (SVR)`.
+FastAPI sidecar untuk benchmark harga tender.
 
 ## Setup
 
@@ -10,24 +10,32 @@ python ml_service/train_models.py
 uvicorn ml_service.app.main:app --reload --port 8001
 ```
 
-## Artifacts
+## Prinsip Modeling
 
-Artefak model disimpan di `ml_service/artifacts/`:
+- Target: `Harga Sebelum Approval`
+- `project_only`: feature proyek saja
+- `hybrid`: feature proyek + estimasi harga runtime
 
-- `project_only_model.joblib`
-- `hybrid_model.joblib`
+Pada family `hybrid`, kolom historis `Harga` diperlakukan sebagai estimasi awal. Di runtime website, padanan semantiknya adalah `ruleBasedEstimateBeforeApproval`. Keduanya disejajarkan melalui transformasi `log1p`.
+
+## Evaluasi
+
+Trainer:
+
+- membersihkan data,
+- membangun dataset audit,
+- membandingkan 3 model utama,
+- memakai time-based holdout,
+- menghasilkan metadata dan feature contract untuk runtime.
+
+Notebook awal menunjukkan `SVR` sebagai model terbaik pada eksperimen awal. Artifact runtime sekarang tetap dipilih dari benchmark production-grade terbaru, tetapi pembandingnya tetap dibatasi ke 3 model utama: Linear Regression, Random Forest, dan SVR.
+
+Artifact evaluasi terbaru juga menyimpan residual analysis dan baseline `direct_estimate`, sehingga kita bisa mengukur apakah model benar-benar memberi nilai tambah di atas estimasi awal.
+
+## Artifact
+
+- `dataset_audit.json`
+- `evaluation_report.json`
+- `model_metadata.json`
 - `project_only_feature_contract.json`
 - `hybrid_feature_contract.json`
-- `model_metadata.json`
-
-## Data Sources
-
-Secara default trainer membaca:
-
-- `../tender_fix.xlsx`
-- `../Mapping_Client_BKI_Fix.xlsx`
-
-Path ini bisa dioverride via environment variable:
-
-- `ML_TRAINING_DATASET_PATH`
-- `ML_CLIENT_MAPPING_PATH`

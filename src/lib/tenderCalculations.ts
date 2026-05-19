@@ -380,10 +380,9 @@ function roundToIncrement(value: number, increment: number | null) {
 
 export function createSvrPredictionPayload(
   form: TenderWizardFormData,
-  directCosts: DirectCostsComputedSummary,
   finalPriceBeforeRounding: number,
-  finalRoundedPrice: number,
-  subtotalBeforeProfit: number
+  _finalRoundedPrice: number,
+  _subtotalBeforeProfit: number
 ): SvrPredictionRequestPayload {
   return {
     projectName: form.directCosts.projectInfo.projectName,
@@ -395,13 +394,7 @@ export function createSvrPredictionPayload(
         ? "survey"
         : form.directCosts.projectInfo.projectCategory,
     workDate: form.directCosts.projectInfo.workDate,
-    totalDurationDays: normalizeNumber(form.directCosts.projectInfo.durationDays),
     ruleBasedSummary: {
-      totalPersonnel: directCosts.totalPersonnel,
-      directCostSubtotal: directCosts.directCostSubtotal,
-      subtotalBeforeProfit,
-      finalPriceBeforeRounding,
-      finalRoundedPrice,
       ruleBasedEstimateBeforeApproval: finalPriceBeforeRounding,
     },
     requestedModels: ["project_only", "hybrid"],
@@ -463,17 +456,22 @@ export function createIdleSvrPrediction(payload: SvrPredictionRequestPayload): S
       modelKey: "project_only",
       predictedPrice: null,
       currency: "IDR",
-      modelName: "SVR Project-Only",
+      modelName: "Project-Only Benchmark",
       modelVersion: null,
       status: "idle",
+      validationState: "limited",
+      validationSummary: "Benchmark project-only masih dalam tahap evaluasi production.",
     },
     hybrid: {
       modelKey: "hybrid",
       predictedPrice: null,
       currency: "IDR",
-      modelName: "SVR Hybrid",
+      modelName: "Hybrid Benchmark",
       modelVersion: null,
       status: "idle",
+      validationState: "limited",
+      validationSummary:
+        "Benchmark hybrid sangat kuat terhadap baseline median, tetapi belum mengalahkan estimasi langsung.",
     },
     bestAvailable: null,
     modelVersions: {},
@@ -482,8 +480,6 @@ export function createIdleSvrPrediction(payload: SvrPredictionRequestPayload): S
       companyCategory: payload.companyCategory || null,
       projectCategory: payload.projectCategory,
       projectLocation: payload.projectLocation,
-      totalDurationDays: payload.totalDurationDays,
-      totalPersonnel: payload.ruleBasedSummary.totalPersonnel,
       ruleBasedEstimateBeforeApproval: payload.ruleBasedSummary.ruleBasedEstimateBeforeApproval,
     },
   };
@@ -525,7 +521,6 @@ export function calculateTenderWizardComputedState(
 
   const svrPayload = createSvrPredictionPayload(
     form,
-    directCosts,
     finalPriceBeforeRounding,
     finalRoundedPrice,
     subtotalBeforeProfit

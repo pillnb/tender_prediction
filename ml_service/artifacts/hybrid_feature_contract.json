@@ -1,26 +1,46 @@
 {
   "model_key": "hybrid",
-  "target_name": "harga_sebelum_approval",
-  "feature_columns": [
+  "display_name": "Hybrid Benchmark",
+  "model_version": "ml-benchmark-validation-v3",
+  "schema_version": "runtime-feature-schema-v3",
+  "runtime_feature_keys": [
     "Year",
     "Quarter",
     "Month",
-    "Harga_log",
-    "Type of Client_BKI",
-    "Type of Client_DEPHUB",
-    "Type of Client_KELISTRIKAN",
-    "Type of Client_LAIN LAIN",
-    "Type of Client_LAIN-LAIN",
-    "Type of Client_MIGAS",
-    "Type of Client_MINERBA",
-    "Type of Client_PERINDUSTRIAN",
-    "Type of Project_Audit",
-    "Type of Project_Inspeksi",
-    "Type of Project_LAIN-LAIN",
-    "Type of Project_Pengujian",
-    "Type of Project_Sertifikasi",
-    "Type of Project_Survey/Identifikasi/Inventarisasi"
+    "Type of Client",
+    "Type of Project",
+    "EstimatedPriceLog"
   ],
-  "uses_harga_log": true,
-  "model_version": "svr-benchmark-v1"
+  "numeric_features": [
+    "Year",
+    "Quarter",
+    "Month",
+    "EstimatedPriceLog"
+  ],
+  "categorical_features": [
+    "Type of Client",
+    "Type of Project"
+  ],
+  "feature_semantics": {
+    "Year": "Tahun dari Tgl. Penawaran / workDate",
+    "Quarter": "Kuartal dari Tgl. Penawaran / workDate",
+    "Month": "Bulan dari Tgl. Penawaran / workDate",
+    "Type of Client": "Kategori client hasil mapping perusahaan / companyCategory",
+    "Type of Project": "Kategori proyek hasil klasifikasi pekerjaan / projectCategory",
+    "EstimatedPriceLog": "log1p dari kolom Harga historis, disejajarkan dengan log1p(ruleBasedEstimateBeforeApproval) saat runtime"
+  },
+  "runtime_enabled": true,
+  "validation_state": "limited",
+  "validation_summary": "Model mengungguli baseline median, tetapi belum mengalahkan baseline estimasi langsung.",
+  "chosen_model_family": "linear_regression",
+  "holdout_metrics": {
+    "mae": 858625.1715920189,
+    "rmse": 3083112.9421888697,
+    "mape": 0.02766533562007387,
+    "r2": 0.9964626315920831,
+    "median_absolute_error": 136130.881264559,
+    "within_10pct_ratio": 0.9230769230769231,
+    "within_20pct_ratio": 0.9615384615384616,
+    "within_30pct_ratio": 0.9711538461538461
+  }
 }

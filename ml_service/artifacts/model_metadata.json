@@ -1,71 +1,717 @@
 {
   "target_name": "harga_sebelum_approval",
-  "generated_at": "2026-05-04T05:51:07.000114",
+  "generated_at": "2026-05-19T10:53:28.023674",
+  "model_version": "ml-benchmark-validation-v3",
+  "dataset_audit_version": "0cad5f023c7b3a939d19ed08b63b64f83ee935804db0234edb576077a5745dae",
   "models": {
     "project_only": {
-      "model_name": "SVR Project-Only",
-      "model_version": "svr-benchmark-v1",
-      "trained_at": "2026-05-04T05:51:05.573325",
+      "display_name": "Project-Only Benchmark",
+      "model_version": "ml-benchmark-validation-v3",
+      "trained_at": "2026-05-19T10:51:55.142021",
       "target_column": "harga_sebelum_approval",
-      "feature_count": 17,
-      "feature_columns": [
-        "Year",
-        "Quarter",
-        "Month",
-        "Type of Client_BKI",
-        "Type of Client_DEPHUB",
-        "Type of Client_KELISTRIKAN",
-        "Type of Client_LAIN LAIN",
-        "Type of Client_LAIN-LAIN",
-        "Type of Client_MIGAS",
-        "Type of Client_MINERBA",
-        "Type of Client_PERINDUSTRIAN",
-        "Type of Project_Audit",
-        "Type of Project_Inspeksi",
-        "Type of Project_LAIN-LAIN",
-        "Type of Project_Pengujian",
-        "Type of Project_Sertifikasi",
-        "Type of Project_Survey/Identifikasi/Inventarisasi"
-      ],
-      "preprocessing_rules_version": "notebook-aligned-v1",
-      "metrics": {
-        "mae": 29618599.369342025,
-        "rmse": 76361410.10437046,
-        "mape": 1.3698485156913212
-      }
+      "feature_schema_version": "runtime-feature-schema-v3",
+      "feature_count": 5,
+      "runtime_enabled": true,
+      "validation_state": "limited",
+      "validation_summary": "Model sedikit mengungguli baseline median, tetapi kualitas holdout belum cukup kuat untuk klaim production-ready.",
+      "chosen_model_family": "svr_linear",
+      "holdout_metrics": {
+        "mae": 23783508.03044675,
+        "rmse": 54165676.48074703,
+        "mape": 1.0072400217587483,
+        "r2": -0.09181678625666789,
+        "median_absolute_error": 9938113.774027003,
+        "within_10pct_ratio": 0.07692307692307693,
+        "within_20pct_ratio": 0.11538461538461539,
+        "within_30pct_ratio": 0.23076923076923078
+      },
+      "baseline_metrics": {
+        "median": {
+          "mae": 23988096.153846152,
+          "rmse": 54269475.76358045,
+          "mape": 0.9735817286301091,
+          "r2": -0.09600535715201097,
+          "median_absolute_error": 11100000.0,
+          "within_10pct_ratio": 0.08653846153846154,
+          "within_20pct_ratio": 0.14423076923076922,
+          "within_30pct_ratio": 0.20192307692307693
+        },
+        "mean": {
+          "mae": 28028135.097312327,
+          "rmse": 51904767.30244144,
+          "mape": 2.1368323426228333,
+          "r2": -0.0025728069202419768,
+          "median_absolute_error": 21791281.002409637,
+          "within_10pct_ratio": 0.057692307692307696,
+          "within_20pct_ratio": 0.15384615384615385,
+          "within_30pct_ratio": 0.25
+        },
+        "rule_based": {
+          "mae": NaN,
+          "rmse": NaN,
+          "mape": NaN,
+          "r2": NaN,
+          "median_absolute_error": NaN,
+          "within_10pct_ratio": NaN,
+          "within_20pct_ratio": NaN,
+          "within_30pct_ratio": NaN
+        },
+        "direct_estimate": {
+          "mae": NaN,
+          "rmse": NaN,
+          "mape": NaN,
+          "r2": NaN,
+          "median_absolute_error": NaN,
+          "within_10pct_ratio": NaN,
+          "within_20pct_ratio": NaN,
+          "within_30pct_ratio": NaN
+        }
+      },
+      "holdout_residual_analysis": {
+        "model_residuals": {
+          "count": 104,
+          "min": -22390504.059274495,
+          "p25": -7399386.707903096,
+          "median": 3497288.5124127623,
+          "mean": 15822471.21866803,
+          "p75": 19413438.490218207,
+          "max": 426709974.469583,
+          "std": 51803184.39199827
+        },
+        "absolute_model_residuals": {
+          "count": 104,
+          "min": 401252.11676922813,
+          "p25": 5203353.24283907,
+          "median": 9938113.774027003,
+          "mean": 23783508.03044675,
+          "p75": 22598123.63001848,
+          "max": 426709974.469583,
+          "std": 48664825.6380584
+        }
+      },
+      "segmented_holdout_metrics": {
+        "project_type": {
+          "Audit": {
+            "count": 1,
+            "metrics": {
+              "mae": 10036925.78230451,
+              "rmse": 10036925.78230451,
+              "mape": 0.28676930806584316,
+              "r2": NaN,
+              "median_absolute_error": 10036925.78230451,
+              "within_10pct_ratio": 0.0,
+              "within_20pct_ratio": 0.0,
+              "within_30pct_ratio": 1.0
+            }
+          },
+          "Inspeksi": {
+            "count": 72,
+            "metrics": {
+              "mae": 19489425.836070735,
+              "rmse": 33451369.71164838,
+              "mape": 1.2134237686153149,
+              "r2": -0.053754758831611404,
+              "median_absolute_error": 10644889.80375776,
+              "within_10pct_ratio": 0.08333333333333333,
+              "within_20pct_ratio": 0.125,
+              "within_30pct_ratio": 0.20833333333333334
+            }
+          },
+          "LAIN-LAIN": {
+            "count": 9,
+            "metrics": {
+              "mae": 80294673.3152589,
+              "rmse": 152948254.38662553,
+              "mape": 0.7360721720069574,
+              "r2": -0.3174529673035449,
+              "median_absolute_error": 24980817.15446673,
+              "within_10pct_ratio": 0.1111111111111111,
+              "within_20pct_ratio": 0.1111111111111111,
+              "within_30pct_ratio": 0.1111111111111111
+            }
+          },
+          "Pengujian": {
+            "count": 15,
+            "metrics": {
+              "mae": 14623812.323848782,
+              "rmse": 27327644.491084494,
+              "mape": 0.4676403208442726,
+              "r2": -0.23574552621121514,
+              "median_absolute_error": 5793185.843666809,
+              "within_10pct_ratio": 0.06666666666666667,
+              "within_20pct_ratio": 0.13333333333333333,
+              "within_30pct_ratio": 0.3333333333333333
+            }
+          },
+          "Sertifikasi": {
+            "count": 7,
+            "metrics": {
+              "mae": 16885714.927428942,
+              "rmse": 19708215.379618246,
+              "mape": 0.4943467505449429,
+              "r2": -0.9460323187861843,
+              "median_absolute_error": 14388883.01017188,
+              "within_10pct_ratio": 0.0,
+              "within_20pct_ratio": 0.0,
+              "within_30pct_ratio": 0.2857142857142857
+            }
+          }
+        },
+        "client_type": {
+          "DEPHUB": {
+            "count": 42,
+            "metrics": {
+              "mae": 13515502.766738106,
+              "rmse": 19966185.536183946,
+              "mape": 0.800955101128006,
+              "r2": -0.12620146857423098,
+              "median_absolute_error": 7575602.213681099,
+              "within_10pct_ratio": 0.07142857142857142,
+              "within_20pct_ratio": 0.09523809523809523,
+              "within_30pct_ratio": 0.19047619047619047
+            }
+          },
+          "KELISTRIKAN": {
+            "count": 1,
+            "metrics": {
+              "mae": 92548229.05519468,
+              "rmse": 92548229.05519468,
+              "mape": 0.8118265706596024,
+              "r2": NaN,
+              "median_absolute_error": 92548229.05519468,
+              "within_10pct_ratio": 0.0,
+              "within_20pct_ratio": 0.0,
+              "within_30pct_ratio": 0.0
+            }
+          },
+          "LAIN LAIN": {
+            "count": 39,
+            "metrics": {
+              "mae": 30389324.172479227,
+              "rmse": 74603848.05058165,
+              "mape": 1.3608860571033092,
+              "r2": -0.11142560371949783,
+              "median_absolute_error": 12838089.869561363,
+              "within_10pct_ratio": 0.10256410256410256,
+              "within_20pct_ratio": 0.15384615384615385,
+              "within_30pct_ratio": 0.28205128205128205
+            }
+          },
+          "LAIN-LAIN": {
+            "count": 9,
+            "metrics": {
+              "mae": 13178782.83041477,
+              "rmse": 15266479.421777653,
+              "mape": 0.96091092643413,
+              "r2": -0.5551747100491147,
+              "median_absolute_error": 10855742.793792536,
+              "within_10pct_ratio": 0.0,
+              "within_20pct_ratio": 0.0,
+              "within_30pct_ratio": 0.2222222222222222
+            }
+          },
+          "MIGAS": {
+            "count": 7,
+            "metrics": {
+              "mae": 44128015.77022506,
+              "rmse": 73681164.04861555,
+              "mape": 0.5257646310813744,
+              "r2": -0.39263042832405826,
+              "median_absolute_error": 12422065.226120736,
+              "within_10pct_ratio": 0.0,
+              "within_20pct_ratio": 0.14285714285714285,
+              "within_30pct_ratio": 0.14285714285714285
+            }
+          },
+          "MINERBA": {
+            "count": 4,
+            "metrics": {
+              "mae": 13123630.08941644,
+              "rmse": 14491189.841018086,
+              "mape": 0.9992344251054641,
+              "r2": 0.06395280413687454,
+              "median_absolute_error": 11176277.836582437,
+              "within_10pct_ratio": 0.0,
+              "within_20pct_ratio": 0.0,
+              "within_30pct_ratio": 0.25
+            }
+          },
+          "PERINDUSTRIAN": {
+            "count": 2,
+            "metrics": {
+              "mae": 74051085.47930145,
+              "rmse": 104440706.69519417,
+              "mape": 0.4504883809731257,
+              "r2": -1.3044257907550483,
+              "median_absolute_error": 74051085.47930145,
+              "within_10pct_ratio": 0.5,
+              "within_20pct_ratio": 0.5,
+              "within_30pct_ratio": 0.5
+            }
+          }
+        },
+        "price_band": {
+          "high": {
+            "count": 36,
+            "metrics": {
+              "mae": 53835100.52953427,
+              "rmse": 91130301.39110488,
+              "mape": 0.6275352528544271,
+              "r2": -0.5448890532674817,
+              "median_absolute_error": 32598657.383272655,
+              "within_10pct_ratio": 0.0,
+              "within_20pct_ratio": 0.0,
+              "within_30pct_ratio": 0.08333333333333333
+            }
+          },
+          "low": {
+            "count": 35,
+            "metrics": {
+              "mae": 10250117.414885568,
+              "rmse": 11746857.794232382,
+              "mape": 2.0838432642467133,
+              "r2": -13.742157486655938,
+              "median_absolute_error": 9934036.813722983,
+              "within_10pct_ratio": 0.02857142857142857,
+              "within_20pct_ratio": 0.02857142857142857,
+              "within_30pct_ratio": 0.05714285714285714
+            }
+          },
+          "mid": {
+            "count": 33,
+            "metrics": {
+              "mae": 5353548.684310114,
+              "rmse": 6343174.752454474,
+              "mape": 0.2796114821671352,
+              "r2": -0.4162737687901008,
+              "median_absolute_error": 4814680.430171201,
+              "within_10pct_ratio": 0.21212121212121213,
+              "within_20pct_ratio": 0.3333333333333333,
+              "within_30pct_ratio": 0.5757575757575758
+            }
+          }
+        },
+        "year": {
+          "2025": {
+            "count": 104,
+            "metrics": {
+              "mae": 23783508.03044675,
+              "rmse": 54165676.48074703,
+              "mape": 1.0072400217587483,
+              "r2": -0.09181678625666789,
+              "median_absolute_error": 9938113.774027003,
+              "within_10pct_ratio": 0.07692307692307693,
+              "within_20pct_ratio": 0.11538461538461539,
+              "within_30pct_ratio": 0.23076923076923078
+            }
+          }
+        },
+        "quarter": {
+          "3": {
+            "count": 8,
+            "metrics": {
+              "mae": 20314348.97317808,
+              "rmse": 29808452.89427064,
+              "mape": 0.6013837765231151,
+              "r2": -0.49435416809923716,
+              "median_absolute_error": 9332623.392060094,
+              "within_10pct_ratio": 0.125,
+              "within_20pct_ratio": 0.125,
+              "within_30pct_ratio": 0.375
+            }
+          },
+          "4": {
+            "count": 96,
+            "metrics": {
+              "mae": 24072604.618552472,
+              "rmse": 55716860.66478622,
+              "mape": 1.0410613755283842,
+              "r2": -0.08484786131339139,
+              "median_absolute_error": 9938113.774027003,
+              "within_10pct_ratio": 0.07291666666666667,
+              "within_20pct_ratio": 0.11458333333333333,
+              "within_30pct_ratio": 0.21875
+            }
+          }
+        }
+      },
+      "training_rows": 415,
+      "training_rows_after_outlier_filter": 415,
+      "holdout_rows": 104,
+      "final_training_rows": 519,
+      "final_training_rows_after_outlier_filter": 519
     },
     "hybrid": {
-      "model_name": "SVR Hybrid",
-      "model_version": "svr-benchmark-v1",
-      "trained_at": "2026-05-04T05:51:07.000114",
+      "display_name": "Hybrid Benchmark",
+      "model_version": "ml-benchmark-validation-v3",
+      "trained_at": "2026-05-19T10:53:27.964360",
       "target_column": "harga_sebelum_approval",
-      "feature_count": 18,
-      "feature_columns": [
-        "Year",
-        "Quarter",
-        "Month",
-        "Harga_log",
-        "Type of Client_BKI",
-        "Type of Client_DEPHUB",
-        "Type of Client_KELISTRIKAN",
-        "Type of Client_LAIN LAIN",
-        "Type of Client_LAIN-LAIN",
-        "Type of Client_MIGAS",
-        "Type of Client_MINERBA",
-        "Type of Client_PERINDUSTRIAN",
-        "Type of Project_Audit",
-        "Type of Project_Inspeksi",
-        "Type of Project_LAIN-LAIN",
-        "Type of Project_Pengujian",
-        "Type of Project_Sertifikasi",
-        "Type of Project_Survey/Identifikasi/Inventarisasi"
-      ],
-      "preprocessing_rules_version": "notebook-aligned-v1",
-      "metrics": {
-        "mae": 6524028.67722078,
-        "rmse": 18670691.524142627,
-        "mape": 0.19732646697592596
-      }
+      "feature_schema_version": "runtime-feature-schema-v3",
+      "feature_count": 6,
+      "runtime_enabled": true,
+      "validation_state": "limited",
+      "validation_summary": "Model mengungguli baseline median, tetapi belum mengalahkan baseline estimasi langsung.",
+      "chosen_model_family": "linear_regression",
+      "holdout_metrics": {
+        "mae": 858625.1715920189,
+        "rmse": 3083112.9421888697,
+        "mape": 0.02766533562007387,
+        "r2": 0.9964626315920831,
+        "median_absolute_error": 136130.881264559,
+        "within_10pct_ratio": 0.9230769230769231,
+        "within_20pct_ratio": 0.9615384615384616,
+        "within_30pct_ratio": 0.9711538461538461
+      },
+      "baseline_metrics": {
+        "median": {
+          "mae": 23988096.153846152,
+          "rmse": 54269475.76358045,
+          "mape": 0.9735817286301091,
+          "r2": -0.09600535715201097,
+          "median_absolute_error": 11100000.0,
+          "within_10pct_ratio": 0.08653846153846154,
+          "within_20pct_ratio": 0.14423076923076922,
+          "within_30pct_ratio": 0.20192307692307693
+        },
+        "mean": {
+          "mae": 28028135.097312327,
+          "rmse": 51904767.30244144,
+          "mape": 2.1368323426228333,
+          "r2": -0.0025728069202419768,
+          "median_absolute_error": 21791281.002409637,
+          "within_10pct_ratio": 0.057692307692307696,
+          "within_20pct_ratio": 0.15384615384615385,
+          "within_30pct_ratio": 0.25
+        },
+        "rule_based": {
+          "mae": NaN,
+          "rmse": NaN,
+          "mape": NaN,
+          "r2": NaN,
+          "median_absolute_error": NaN,
+          "within_10pct_ratio": NaN,
+          "within_20pct_ratio": NaN,
+          "within_30pct_ratio": NaN
+        },
+        "direct_estimate": {
+          "mae": 625961.5384615647,
+          "rmse": 3012043.134842834,
+          "mape": 0.021120109263648823,
+          "r2": 0.9966238339512478,
+          "median_absolute_error": 1.4901161193847656e-08,
+          "within_10pct_ratio": 0.9230769230769231,
+          "within_20pct_ratio": 0.9615384615384616,
+          "within_30pct_ratio": 0.9711538461538461
+        }
+      },
+      "holdout_residual_analysis": {
+        "model_residuals": {
+          "count": 104,
+          "min": -25778226.321322426,
+          "p25": -73623.0377927986,
+          "median": 23952.41508506844,
+          "mean": -328271.81986263575,
+          "p75": 168489.99027019646,
+          "max": 8241804.518008225,
+          "std": 3065586.89757387
+        },
+        "absolute_model_residuals": {
+          "count": 104,
+          "min": 2756.867566194851,
+          "p25": 45819.88275528373,
+          "median": 136130.881264559,
+          "mean": 858625.1715920189,
+          "p75": 352297.55630971584,
+          "max": 25778226.321322426,
+          "std": 2961139.684142085
+        },
+        "direct_estimate_metrics": {
+          "mae": 625961.5384615647,
+          "rmse": 3012043.134842834,
+          "mape": 0.021120109263648823,
+          "r2": 0.9966238339512478,
+          "median_absolute_error": 1.4901161193847656e-08,
+          "within_10pct_ratio": 0.9230769230769231,
+          "within_20pct_ratio": 0.9615384615384616,
+          "within_30pct_ratio": 0.9711538461538461
+        },
+        "estimate_residuals": {
+          "count": 104,
+          "min": -25000000.000000015,
+          "p25": -1.4901161193847656e-08,
+          "median": -9.313225746154785e-10,
+          "mean": -360576.92307692964,
+          "p75": 1.4901161193847656e-08,
+          "max": 7999999.999999985,
+          "std": 2990382.6057376373
+        },
+        "absolute_estimate_residuals": {
+          "count": 104,
+          "min": 0.0,
+          "p25": 3.725290298461914e-09,
+          "median": 1.4901161193847656e-08,
+          "mean": 625961.5384615647,
+          "p75": 4.6566128730773926e-08,
+          "max": 25000000.000000015,
+          "std": 2946281.7242281293
+        },
+        "model_vs_direct_estimate": {
+          "mae_delta": -232663.63313045423,
+          "rmse_delta": -71069.80734603573,
+          "mape_delta": -0.006545226356425047
+        }
+      },
+      "segmented_holdout_metrics": {
+        "project_type": {
+          "Audit": {
+            "count": 1,
+            "metrics": {
+              "mae": 1226271.2341462374,
+              "rmse": 1226271.2341462374,
+              "mape": 0.03503632097560678,
+              "r2": NaN,
+              "median_absolute_error": 1226271.2341462374,
+              "within_10pct_ratio": 1.0,
+              "within_20pct_ratio": 1.0,
+              "within_30pct_ratio": 1.0
+            }
+          },
+          "Inspeksi": {
+            "count": 72,
+            "metrics": {
+              "mae": 1097659.7135085878,
+              "rmse": 3687347.5751152085,
+              "mape": 0.0361306337959914,
+              "r2": 0.9871961702119832,
+              "median_absolute_error": 149316.0095550972,
+              "within_10pct_ratio": 0.8888888888888888,
+              "within_20pct_ratio": 0.9444444444444444,
+              "within_30pct_ratio": 0.9583333333333334
+            }
+          },
+          "LAIN-LAIN": {
+            "count": 9,
+            "metrics": {
+              "mae": 477380.4823457241,
+              "rmse": 738309.0198459247,
+              "mape": 0.00729104020075955,
+              "r2": 0.9999693011279369,
+              "median_absolute_error": 106288.80158698186,
+              "within_10pct_ratio": 1.0,
+              "within_20pct_ratio": 1.0,
+              "within_30pct_ratio": 1.0
+            }
+          },
+          "Pengujian": {
+            "count": 15,
+            "metrics": {
+              "mae": 108527.10207573467,
+              "rmse": 178159.25523221577,
+              "mape": 0.005249469226462642,
+              "r2": 0.9999474779794347,
+              "median_absolute_error": 54142.28839971125,
+              "within_10pct_ratio": 1.0,
+              "within_20pct_ratio": 1.0,
+              "within_30pct_ratio": 1.0
+            }
+          },
+          "Sertifikasi": {
+            "count": 7,
+            "metrics": {
+              "mae": 444988.0523654132,
+              "rmse": 626192.0295728698,
+              "mape": 0.013770221428131224,
+              "r2": 0.9980354163748687,
+              "median_absolute_error": 183234.3659869861,
+              "within_10pct_ratio": 1.0,
+              "within_20pct_ratio": 1.0,
+              "within_30pct_ratio": 1.0
+            }
+          }
+        },
+        "client_type": {
+          "DEPHUB": {
+            "count": 42,
+            "metrics": {
+              "mae": 603868.6516374745,
+              "rmse": 2337268.062522397,
+              "mape": 0.018568729134135657,
+              "r2": 0.9845672637586655,
+              "median_absolute_error": 54147.61104471423,
+              "within_10pct_ratio": 0.9523809523809523,
+              "within_20pct_ratio": 0.9761904761904762,
+              "within_30pct_ratio": 0.9761904761904762
+            }
+          },
+          "KELISTRIKAN": {
+            "count": 1,
+            "metrics": {
+              "mae": 626793.6270509958,
+              "rmse": 626793.6270509958,
+              "mape": 0.005498189710973648,
+              "r2": NaN,
+              "median_absolute_error": 626793.6270509958,
+              "within_10pct_ratio": 1.0,
+              "within_20pct_ratio": 1.0,
+              "within_30pct_ratio": 1.0
+            }
+          },
+          "LAIN LAIN": {
+            "count": 39,
+            "metrics": {
+              "mae": 747032.6019777798,
+              "rmse": 1494960.1103350332,
+              "mape": 0.03881946528094035,
+              "r2": 0.9995537100070475,
+              "median_absolute_error": 187265.4160731919,
+              "within_10pct_ratio": 0.8717948717948718,
+              "within_20pct_ratio": 0.9487179487179487,
+              "within_30pct_ratio": 0.9743589743589743
+            }
+          },
+          "LAIN-LAIN": {
+            "count": 9,
+            "metrics": {
+              "mae": 130269.77788062497,
+              "rmse": 155604.9052449935,
+              "mape": 0.0051332811600396855,
+              "r2": 0.9998384347493092,
+              "median_absolute_error": 155186.26378704607,
+              "within_10pct_ratio": 1.0,
+              "within_20pct_ratio": 1.0,
+              "within_30pct_ratio": 1.0
+            }
+          },
+          "MIGAS": {
+            "count": 7,
+            "metrics": {
+              "mae": 4216309.732815959,
+              "rmse": 9768260.747398863,
+              "mape": 0.059715946597427835,
+              "r2": 0.9755230437869331,
+              "median_absolute_error": 479920.46580349654,
+              "within_10pct_ratio": 0.8571428571428571,
+              "within_20pct_ratio": 0.8571428571428571,
+              "within_30pct_ratio": 0.8571428571428571
+            }
+          },
+          "MINERBA": {
+            "count": 4,
+            "metrics": {
+              "mae": 623835.486802988,
+              "rmse": 803807.0462176531,
+              "mape": 0.026417707533126424,
+              "r2": 0.99711999479567,
+              "median_absolute_error": 504457.5959408409,
+              "within_10pct_ratio": 1.0,
+              "within_20pct_ratio": 1.0,
+              "within_30pct_ratio": 1.0
+            }
+          },
+          "PERINDUSTRIAN": {
+            "count": 2,
+            "metrics": {
+              "mae": 495765.6473811809,
+              "rmse": 653222.8633420413,
+              "mape": 0.003984479215740034,
+              "r2": 0.9999098541210636,
+              "median_absolute_error": 495765.6473811809,
+              "within_10pct_ratio": 1.0,
+              "within_20pct_ratio": 1.0,
+              "within_30pct_ratio": 1.0
+            }
+          }
+        },
+        "price_band": {
+          "high": {
+            "count": 36,
+            "metrics": {
+              "mae": 1924767.273238595,
+              "rmse": 5081394.718597209,
+              "mape": 0.03643110518589117,
+              "r2": 0.9951967239541574,
+              "median_absolute_error": 381142.5140941553,
+              "within_10pct_ratio": 0.8888888888888888,
+              "within_20pct_ratio": 0.9444444444444444,
+              "within_30pct_ratio": 0.9444444444444444
+            }
+          },
+          "low": {
+            "count": 35,
+            "metrics": {
+              "mae": 124885.47492419761,
+              "rmse": 478414.5002300895,
+              "mape": 0.025558978653971835,
+              "r2": 0.9755473297041811,
+              "median_absolute_error": 34963.52947816253,
+              "within_10pct_ratio": 0.9714285714285714,
+              "within_20pct_ratio": 0.9714285714285714,
+              "within_30pct_ratio": 0.9714285714285714
+            }
+          },
+          "mid": {
+            "count": 33,
+            "metrics": {
+              "mae": 473769.8298979892,
+              "rmse": 1243522.1920818675,
+              "mape": 0.02033669287595715,
+              "r2": 0.9455696735077131,
+              "median_absolute_error": 106288.80158698186,
+              "within_10pct_ratio": 0.9090909090909091,
+              "within_20pct_ratio": 0.9696969696969697,
+              "within_30pct_ratio": 1.0
+            }
+          }
+        },
+        "year": {
+          "2025": {
+            "count": 104,
+            "metrics": {
+              "mae": 858625.1715920189,
+              "rmse": 3083112.9421888697,
+              "mape": 0.02766533562007387,
+              "r2": 0.9964626315920831,
+              "median_absolute_error": 136130.881264559,
+              "within_10pct_ratio": 0.9230769230769231,
+              "within_20pct_ratio": 0.9615384615384616,
+              "within_30pct_ratio": 0.9711538461538461
+            }
+          }
+        },
+        "quarter": {
+          "3": {
+            "count": 8,
+            "metrics": {
+              "mae": 331156.31311227044,
+              "rmse": 497189.12129425566,
+              "mape": 0.009779230438245577,
+              "r2": 0.9995842637424522,
+              "median_absolute_error": 191474.12829899043,
+              "within_10pct_ratio": 1.0,
+              "within_20pct_ratio": 1.0,
+              "within_30pct_ratio": 1.0
+            }
+          },
+          "4": {
+            "count": 96,
+            "metrics": {
+              "mae": 902580.9097986646,
+              "rmse": 3205794.4070525025,
+              "mape": 0.029155844385226226,
+              "r2": 0.9964085742332053,
+              "median_absolute_error": 136130.881264559,
+              "within_10pct_ratio": 0.9166666666666666,
+              "within_20pct_ratio": 0.9583333333333334,
+              "within_30pct_ratio": 0.96875
+            }
+          }
+        }
+      },
+      "training_rows": 415,
+      "training_rows_after_outlier_filter": 315,
+      "holdout_rows": 104,
+      "final_training_rows": 519,
+      "final_training_rows_after_outlier_filter": 376
     }
   }
 }

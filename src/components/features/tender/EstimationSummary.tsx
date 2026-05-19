@@ -79,6 +79,19 @@ function BreakdownGroup({
   );
 }
 
+function formatValidationState(value: string | null | undefined) {
+  switch (value) {
+    case "production_ready":
+      return "Production ready";
+    case "limited":
+      return "Limited validation";
+    case "blocked":
+      return "Blocked";
+    default:
+      return "-";
+  }
+}
+
 export function EstimationSummary({
   projectInfo,
   computed,
@@ -129,7 +142,7 @@ export function EstimationSummary({
             </div>
           </div>
           <div className="border-secondary/12 text-on-secondary-container bg-secondary-container/35 rounded-full border px-4 py-2 text-[11px] font-bold tracking-[0.12em] uppercase">
-            AI Prediction Active
+            Experimental ML Benchmark
           </div>
         </div>
 
@@ -307,14 +320,14 @@ export function EstimationSummary({
               <div className="flex items-center gap-2">
                 <Bot className="text-primary h-5 w-5" />
                 <h4 className="text-on-surface text-lg font-bold">
-                  Machine Learning Prediction Benchmark (SVR)
+                  Experimental Machine Learning Benchmark
                 </h4>
               </div>
               <p className="text-on-surface-variant mt-1 text-sm">
-                Benchmark ML ini memprediksi harga sebelum approval dari dua model SVR yang berbeda,
-                lalu dibandingkan dengan hasil rule-based calculator. SVR Project-Only hanya
-                menggunakan parameter proyek, sementara SVR Hybrid menggunakan parameter proyek plus
-                ringkasan biaya langsung sebagai input.
+                Rule-based calculator tetap menjadi sumber harga utama. Benchmark ML hanya untuk
+                pembanding. Hybrid benchmark sekarang memakai estimasi harga runtime yang
+                disejajarkan dengan kolom Harga historis, sedangkan project-only tetap tersedia
+                sebagai baseline yang lebih konservatif.
               </p>
             </div>
             <Button variant="outline" onClick={onRefreshPrediction} disabled={isPredicting}>
@@ -326,7 +339,7 @@ export function EstimationSummary({
           <div className="bg-surface-container-low mt-6 space-y-3 rounded-[1.5rem] p-5">
             <SummaryRow label="Rule-Based Price" value={formatIdr(summary.finalRoundedPrice)} />
             <SummaryRow
-              label="SVR Project-Only"
+              label={aiBenchmark.projectOnly.modelName}
               value={
                 aiBenchmark.projectOnly.predictedPrice === null
                   ? aiBenchmark.projectOnly.status === "error"
@@ -336,12 +349,16 @@ export function EstimationSummary({
               }
             />
             <SummaryRow
+              label="Project-Only Validation"
+              value={formatValidationState(aiBenchmark.projectOnly.validationState)}
+            />
+            <SummaryRow
               label="Variance Project-Only"
               value={projectOnlyVariance === null ? "-" : formatIdr(projectOnlyVariance)}
               emphasized
             />
             <SummaryRow
-              label="SVR Hybrid"
+              label={aiBenchmark.hybrid.modelName}
               value={
                 aiBenchmark.hybrid.predictedPrice === null
                   ? aiBenchmark.hybrid.status === "error"
@@ -349,6 +366,10 @@ export function EstimationSummary({
                     : "Waiting for prediction"
                   : formatIdr(aiBenchmark.hybrid.predictedPrice)
               }
+            />
+            <SummaryRow
+              label="Hybrid Validation"
+              value={formatValidationState(aiBenchmark.hybrid.validationState)}
             />
             <SummaryRow
               label="Variance Hybrid"
@@ -367,14 +388,6 @@ export function EstimationSummary({
               <SummaryRow label="Lokasi" value={aiBenchmark.payload.projectLocation} />
               <SummaryRow label="Kategori" value={aiBenchmark.payload.projectCategory} />
               <SummaryRow
-                label="Durasi"
-                value={`${aiBenchmark.payload.totalDurationDays.toLocaleString("id-ID")} hari`}
-              />
-              <SummaryRow
-                label="Total Personel"
-                value={aiBenchmark.payload.ruleBasedSummary.totalPersonnel.toLocaleString("id-ID")}
-              />
-              <SummaryRow
                 label="Estimate Before Approval"
                 value={formatIdr(
                   aiBenchmark.payload.ruleBasedSummary.ruleBasedEstimateBeforeApproval
@@ -382,6 +395,16 @@ export function EstimationSummary({
               />
               <SummaryRow label="Best Available Model" value={aiBenchmark.bestAvailable ?? "-"} />
             </div>
+            {aiBenchmark.projectOnly.validationSummary || aiBenchmark.hybrid.validationSummary ? (
+              <div className="text-on-surface-variant mt-4 space-y-2 text-sm">
+                {aiBenchmark.projectOnly.validationSummary ? (
+                  <div>Project-Only validation: {aiBenchmark.projectOnly.validationSummary}</div>
+                ) : null}
+                {aiBenchmark.hybrid.validationSummary ? (
+                  <div>Hybrid validation: {aiBenchmark.hybrid.validationSummary}</div>
+                ) : null}
+              </div>
+            ) : null}
             {aiBenchmark.projectOnly.errorMessage || aiBenchmark.hybrid.errorMessage ? (
               <div className="text-error mt-4 space-y-1 text-sm">
                 {aiBenchmark.projectOnly.errorMessage ? (

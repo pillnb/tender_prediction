@@ -1,25 +1,43 @@
 {
   "model_key": "project_only",
-  "target_name": "harga_sebelum_approval",
-  "feature_columns": [
+  "display_name": "Project-Only Benchmark",
+  "model_version": "ml-benchmark-validation-v3",
+  "schema_version": "runtime-feature-schema-v3",
+  "runtime_feature_keys": [
     "Year",
     "Quarter",
     "Month",
-    "Type of Client_BKI",
-    "Type of Client_DEPHUB",
-    "Type of Client_KELISTRIKAN",
-    "Type of Client_LAIN LAIN",
-    "Type of Client_LAIN-LAIN",
-    "Type of Client_MIGAS",
-    "Type of Client_MINERBA",
-    "Type of Client_PERINDUSTRIAN",
-    "Type of Project_Audit",
-    "Type of Project_Inspeksi",
-    "Type of Project_LAIN-LAIN",
-    "Type of Project_Pengujian",
-    "Type of Project_Sertifikasi",
-    "Type of Project_Survey/Identifikasi/Inventarisasi"
+    "Type of Client",
+    "Type of Project"
   ],
-  "uses_harga_log": false,
-  "model_version": "svr-benchmark-v1"
+  "numeric_features": [
+    "Year",
+    "Quarter",
+    "Month"
+  ],
+  "categorical_features": [
+    "Type of Client",
+    "Type of Project"
+  ],
+  "feature_semantics": {
+    "Year": "Tahun dari Tgl. Penawaran / workDate",
+    "Quarter": "Kuartal dari Tgl. Penawaran / workDate",
+    "Month": "Bulan dari Tgl. Penawaran / workDate",
+    "Type of Client": "Kategori client hasil mapping perusahaan / companyCategory",
+    "Type of Project": "Kategori proyek hasil klasifikasi pekerjaan / projectCategory"
+  },
+  "runtime_enabled": true,
+  "validation_state": "limited",
+  "validation_summary": "Model sedikit mengungguli baseline median, tetapi kualitas holdout belum cukup kuat untuk klaim production-ready.",
+  "chosen_model_family": "svr_linear",
+  "holdout_metrics": {
+    "mae": 23783508.03044675,
+    "rmse": 54165676.48074703,
+    "mape": 1.0072400217587483,
+    "r2": -0.09181678625666789,
+    "median_absolute_error": 9938113.774027003,
+    "within_10pct_ratio": 0.07692307692307693,
+    "within_20pct_ratio": 0.11538461538461539,
+    "within_30pct_ratio": 0.23076923076923078
+  }
 }
