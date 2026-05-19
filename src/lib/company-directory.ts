@@ -1,26 +1,7 @@
-import path from "node:path";
-import { existsSync } from "node:fs";
 import { PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { CompanyCategory } from "@/types/tender";
-import * as XLSX from "xlsx";
-
-const COMPANY_MAPPING_FILE = path.join(process.cwd(), "Mapping_Client_BKI_Fix.xlsx");
 const companyPrisma = prisma as unknown as PrismaClient;
-
-const CLIENT_TYPE_TO_CATEGORY: Record<string, CompanyCategory> = {
-  MIGAS: "migas",
-  MINERBA: "minerba",
-  EBTKE: "ebtke",
-  KELISTRIKAN: "kelistrikan",
-  NAKERTRANS: "nakertrans",
-  DEPHUB: "dephub",
-  PERINDUSTRIAN: "perindustrian",
-  BKI: "bki",
-  "LAIN LAIN": "lain-lain",
-  "LAIN-LAIN": "lain-lain",
-  LAINNYA: "lain-lain",
-};
 
 export type CompanyDirectorySuggestion = {
   companyName: string;
@@ -28,99 +9,58 @@ export type CompanyDirectorySuggestion = {
   source: string;
 };
 
-type CompanyWorkbookRow = CompanyDirectorySuggestion & {
-  normalizedName: string;
-};
-
 function normalizeCompanyName(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
-function mapClientTypeToCategory(value: unknown): CompanyCategory | null {
-  const normalized = String(value ?? "")
-    .trim()
-    .toUpperCase()
-    .replace(/\s+/g, " ");
-
-  return CLIENT_TYPE_TO_CATEGORY[normalized] ?? null;
-}
-
-function loadCompanyRowsFromWorkbook() {
-  if (!existsSync(COMPANY_MAPPING_FILE)) {
-    return [];
-  }
-
-  const workbook = XLSX.readFile(COMPANY_MAPPING_FILE);
-  const firstSheetName = workbook.SheetNames[0];
-
-  if (!firstSheetName) {
-    return [];
-  }
-
-  const worksheet = workbook.Sheets[firstSheetName];
-  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet);
-
-  return rows
-    .map((row) => {
-      const companyName = String(row.Perusahaan ?? "").trim();
-      const companyCategory = mapClientTypeToCategory(row["Type of Client"]);
-
-      if (!companyName || !companyCategory) {
-        return null;
-      }
-
-      return {
-        companyName,
-        normalizedName: normalizeCompanyName(companyName),
-        companyCategory,
-        source: "mapping_client_bki_fix",
-      };
-    })
-    .filter((row): row is NonNullable<typeof row> => Boolean(row));
-}
-
-function searchWorkbookCompanies(query: string) {
+async function searchTenderCalculationCompanies(query: string) {
   const trimmed = query.trim();
+  const normalized = normalizeCompanyName(trimmed);
+  const rows = await companyPrisma.tenderCalculation.findMany({
+    where: {
+      companyName: {
+        contains: trimmed,
+        mode: "insensitive",
+      },
+    },
+    orderBy: [{ updatedAt: "desc" }],
+    take: 20,
+    select: {
+      companyName: true,
+      companyCategory: true,
+    },
+  });
 
-  if (!trimmed) {
-    return {
-      suggestions: [] as CompanyDirectorySuggestion[],
-      exactMatch: null as CompanyDirectorySuggestion | null,
-    };
+  const deduped = new Map<string, CompanyDirectorySuggestion>();
+
+  for (const row of rows) {
+    const companyName = row.companyName.trim();
+    const companyCategory = row.companyCategory as CompanyCategory;
+
+    if (!companyName || !companyCategory) {
+      continue;
+    }
+
+    const key = normalizeCompanyName(companyName);
+
+    if (!deduped.has(key)) {
+      deduped.set(key, {
+        companyName,
+        companyCategory,
+        source: "tender_calculation",
+      });
+    }
   }
 
-  const normalized = normalizeCompanyName(trimmed);
-  const rows = loadCompanyRowsFromWorkbook();
-  const matchingRows = rows
-    .filter((row) => row.companyName.toLowerCase().includes(trimmed.toLowerCase()))
-    .slice(0, 8);
-  const exactMatch = rows.find((row) => row.normalizedName === normalized) ?? null;
+  const suggestions = Array.from(deduped.values()).slice(0, 8);
+  const exactMatch = suggestions.find(
+    (suggestion) => normalizeCompanyName(suggestion.companyName) === normalized
+  );
 
   return {
-    suggestions: matchingRows.map(({ normalizedName: _normalizedName, ...row }) => row),
-    exactMatch: exactMatch
-      ? (({ normalizedName: _normalizedName, ...row }) => row)(exactMatch)
-      : null,
+    suggestions,
+    exactMatch: exactMatch ?? null,
   };
-}
-
-export async function ensureCompanyDirectorySeeded() {
-  const existingCount = await companyPrisma.companyDirectory.count();
-
-  if (existingCount > 0) {
-    return;
-  }
-
-  const rows = loadCompanyRowsFromWorkbook();
-
-  if (rows.length === 0) {
-    return;
-  }
-
-  await companyPrisma.companyDirectory.createMany({
-    data: rows,
-    skipDuplicates: true,
-  });
 }
 
 export async function searchCompanyDirectory(query: string) {
@@ -134,8 +74,6 @@ export async function searchCompanyDirectory(query: string) {
   }
 
   try {
-    await ensureCompanyDirectorySeeded();
-
     const normalized = normalizeCompanyName(trimmed);
     const [suggestions, exactMatch] = await Promise.all([
       companyPrisma.companyDirectory.findMany({
@@ -170,7 +108,7 @@ export async function searchCompanyDirectory(query: string) {
       exactMatch: (exactMatch as CompanyDirectorySuggestion | null) ?? null,
     };
   } catch {
-    return searchWorkbookCompanies(trimmed);
+    return searchTenderCalculationCompanies(trimmed);
   }
 }
 
@@ -185,20 +123,24 @@ export async function upsertCompanyDirectoryEntry(
     return null;
   }
 
-  return companyPrisma.companyDirectory.upsert({
-    where: {
-      normalizedName: normalizeCompanyName(trimmedName),
-    },
-    update: {
-      companyName: trimmedName,
-      companyCategory,
-      source,
-    },
-    create: {
-      companyName: trimmedName,
-      normalizedName: normalizeCompanyName(trimmedName),
-      companyCategory,
-      source,
-    },
-  });
+  try {
+    return await companyPrisma.companyDirectory.upsert({
+      where: {
+        normalizedName: normalizeCompanyName(trimmedName),
+      },
+      update: {
+        companyName: trimmedName,
+        companyCategory,
+        source,
+      },
+      create: {
+        companyName: trimmedName,
+        normalizedName: normalizeCompanyName(trimmedName),
+        companyCategory,
+        source,
+      },
+    });
+  } catch {
+    return null;
+  }
 }

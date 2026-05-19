@@ -372,7 +372,7 @@ export function TenderDashboard() {
     }
 
     setIsCompanySearching(true);
-    setCompanyHelperText("Mencari nama perusahaan yang sudah tersimpan...");
+    setCompanyHelperText("Mulai ketik nama perusahaan untuk melihat opsi yang cocok.");
 
     const timeoutId = window.setTimeout(async () => {
       try {
@@ -405,7 +405,11 @@ export function TenderDashboard() {
               },
             },
           }));
-          setCompanyHelperText("Perusahaan ditemukan di database. Kategori perusahaan diisi otomatis.");
+          setCompanyHelperText(
+            "Perusahaan ditemukan di database. Kategori perusahaan diisi otomatis."
+          );
+        } else if ((payload.suggestions ?? []).length > 0) {
+          setCompanyHelperText("Pilih salah satu nama perusahaan yang cocok dari dropdown.");
         } else {
           setCompanyHelperText(
             "Perusahaan belum ada di database. Pilih kategori perusahaan, lalu data akan disimpan saat tender disimpan."
@@ -413,11 +417,11 @@ export function TenderDashboard() {
         }
       } catch {
         setCompanySuggestions([]);
-        setCompanyHelperText("Pencarian perusahaan gagal. Kamu masih bisa isi manual.");
+        setCompanyHelperText("Data perusahaan belum bisa dimuat dari database.");
       } finally {
         setIsCompanySearching(false);
       }
-    }, 250);
+    }, 120);
 
     return () => {
       window.clearTimeout(timeoutId);

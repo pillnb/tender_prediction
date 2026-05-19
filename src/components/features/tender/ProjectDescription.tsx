@@ -245,7 +245,6 @@ export function ProjectDescription({
             ) : null}
           </div>
           <div className="text-on-surface-variant flex items-center gap-2 text-xs">
-            {isCompanySearching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
             <span>
               {companyHelperText ??
                 "Ketik nama perusahaan untuk mencari data yang sudah ada dan mengisi kategori otomatis."}
