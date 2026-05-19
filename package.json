@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/**/*.test.ts",
     "api:live-test": "node scripts/live-api-seed.js",
+    "db:sync:companies": "tsx scripts/sync-company-directory.ts",
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
     "format:check": "prettier . --check",

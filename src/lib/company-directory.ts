@@ -1,7 +1,24 @@
+import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { CompanyCategory } from "@/types/tender";
+import * as XLSX from "xlsx";
 const companyPrisma = prisma as unknown as PrismaClient;
+const COMPANY_MAPPING_FILE = path.join(process.cwd(), "Mapping_Client_BKI_Fix.xlsx");
+
+const CLIENT_TYPE_TO_CATEGORY: Record<string, CompanyCategory> = {
+  MIGAS: "migas",
+  MINERBA: "minerba",
+  EBTKE: "ebtke",
+  KELISTRIKAN: "kelistrikan",
+  NAKERTRANS: "nakertrans",
+  DEPHUB: "dephub",
+  PERINDUSTRIAN: "perindustrian",
+  BKI: "bki",
+  "LAIN LAIN": "lain-lain",
+  "LAIN-LAIN": "lain-lain",
+  LAINNYA: "lain-lain",
+};
 
 export type CompanyDirectorySuggestion = {
   companyName: string;
@@ -15,6 +32,58 @@ function normalizeCompanyName(value: string) {
     .toLowerCase()
     .replace(/[^\p{L}\p{N}\s]/gu, " ")
     .replace(/\s+/g, " ");
+}
+
+function mapClientTypeToCategory(value: unknown): CompanyCategory | null {
+  const normalized = String(value ?? "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, " ");
+
+  return CLIENT_TYPE_TO_CATEGORY[normalized] ?? null;
+}
+
+export function loadCompanyDirectoryWorkbookRows() {
+  const workbook = XLSX.readFile(COMPANY_MAPPING_FILE);
+  const firstSheetName = workbook.SheetNames[0];
+
+  if (!firstSheetName) {
+    return [];
+  }
+
+  const worksheet = workbook.Sheets[firstSheetName];
+  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet);
+  const deduped = new Map<
+    string,
+    {
+      companyName: string;
+      normalizedName: string;
+      companyCategory: CompanyCategory;
+      source: string;
+    }
+  >();
+
+  for (const row of rows) {
+    const companyName = String(row.Perusahaan ?? "").trim();
+    const companyCategory = mapClientTypeToCategory(row["Type of Client"]);
+
+    if (!companyName || !companyCategory) {
+      continue;
+    }
+
+    const normalizedName = normalizeCompanyName(companyName);
+
+    if (!deduped.has(normalizedName)) {
+      deduped.set(normalizedName, {
+        companyName,
+        normalizedName,
+        companyCategory,
+        source: "mapping_client_bki_fix",
+      });
+    }
+  }
+
+  return Array.from(deduped.values());
 }
 
 function buildCompanySearchClauses(query: string) {
