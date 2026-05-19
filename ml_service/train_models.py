@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from itertools import product
 from pathlib import Path
+import platform
 import sys
 from typing import Any, Callable
 
@@ -697,6 +698,13 @@ def main() -> None:
             "generated_at": datetime.utcnow().isoformat(),
             "model_version": MODEL_VERSION,
             "dataset_audit_version": dataset_audit["dataset_version"],
+            "training_environment": {
+                "python_version": platform.python_version(),
+                "numpy_version": np.__version__,
+                "pandas_version": pd.__version__,
+                "scikit_learn_version": sys.modules["sklearn"].__version__,
+                "joblib_version": joblib.__version__,
+            },
             "models": metadata_by_model,
         },
     )

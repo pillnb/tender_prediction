@@ -1,13 +1,20 @@
 {
   "target_name": "harga_sebelum_approval",
-  "generated_at": "2026-05-19T10:53:28.023674",
+  "generated_at": "2026-05-19T11:35:27.733703",
   "model_version": "ml-benchmark-validation-v3",
   "dataset_audit_version": "0cad5f023c7b3a939d19ed08b63b64f83ee935804db0234edb576077a5745dae",
+  "training_environment": {
+    "python_version": "3.10.0",
+    "numpy_version": "2.1.2",
+    "pandas_version": "2.3.0",
+    "scikit_learn_version": "1.7.2",
+    "joblib_version": "1.5.3"
+  },
   "models": {
     "project_only": {
       "display_name": "Project-Only Benchmark",
       "model_version": "ml-benchmark-validation-v3",
-      "trained_at": "2026-05-19T10:51:55.142021",
+      "trained_at": "2026-05-19T11:33:54.449602",
       "target_column": "harga_sebelum_approval",
       "feature_schema_version": "runtime-feature-schema-v3",
       "feature_count": 5,
@@ -344,7 +351,7 @@
     "hybrid": {
       "display_name": "Hybrid Benchmark",
       "model_version": "ml-benchmark-validation-v3",
-      "trained_at": "2026-05-19T10:53:27.964360",
+      "trained_at": "2026-05-19T11:35:27.676532",
       "target_column": "harga_sebelum_approval",
       "feature_schema_version": "runtime-feature-schema-v3",
       "feature_count": 6,
