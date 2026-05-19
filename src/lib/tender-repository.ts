@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { upsertCompanyDirectoryEntry } from "@/lib/company-directory";
 import { prisma } from "@/lib/prisma";
 import {
   calculateTenderWizardComputedState,
@@ -184,6 +185,12 @@ export async function saveTenderCalculation(
   aiBenchmark?: SvrPredictionResult | null
 ) {
   const computed = assertValidTenderForm(form);
+  const companyName = form.directCosts.projectInfo.companyName.trim();
+  const companyCategory = form.directCosts.projectInfo.companyCategory;
+
+  if (companyName && companyCategory) {
+    await upsertCompanyDirectoryEntry(companyName, companyCategory, "tender_form");
+  }
 
   const record = await prisma.tenderCalculation.create({
     data: buildPersistedTenderData(form, status, computed, aiBenchmark),
@@ -199,6 +206,12 @@ export async function updateTenderCalculation(
   aiBenchmark?: SvrPredictionResult | null
 ) {
   const computed = assertValidTenderForm(form);
+  const companyName = form.directCosts.projectInfo.companyName.trim();
+  const companyCategory = form.directCosts.projectInfo.companyCategory;
+
+  if (companyName && companyCategory) {
+    await upsertCompanyDirectoryEntry(companyName, companyCategory, "tender_form");
+  }
 
   const record = await prisma.tenderCalculation.update({
     where: { id },

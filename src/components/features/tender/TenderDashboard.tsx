@@ -35,6 +35,7 @@ import {
 } from "@/lib/tender-validation";
 import { cn } from "@/lib/utils";
 import type {
+  CompanyCategory,
   EquipmentCostInput,
   LaborCostInput,
   MobilityCostInput,
@@ -45,6 +46,12 @@ import type {
   TenderWizardFormData,
   TenderWizardStep,
 } from "@/types/tender";
+
+type CompanyDirectorySuggestion = {
+  companyName: string;
+  companyCategory: CompanyCategory;
+  source?: string;
+};
 
 const wizardSteps: Array<{
   step: Exclude<TenderWizardStep, "landing">;
@@ -283,6 +290,11 @@ export function TenderDashboard() {
   const [projectCategoryHelperText, setProjectCategoryHelperText] = useState(
     "Kategori proyek akan terdeteksi otomatis dari nama pekerjaan, lalu tetap bisa kamu ubah manual bila perlu."
   );
+  const [companySuggestions, setCompanySuggestions] = useState<CompanyDirectorySuggestion[]>([]);
+  const [isCompanySearching, setIsCompanySearching] = useState(false);
+  const [companyHelperText, setCompanyHelperText] = useState(
+    "Ketik nama perusahaan untuk mencari data yang sudah ada dan mengisi kategori otomatis."
+  );
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [stepNotice, setStepNotice] = useState<string | null>(null);
 
@@ -346,6 +358,71 @@ export function TenderDashboard() {
       window.clearTimeout(timeoutId);
     };
   }, [form.directCosts.projectInfo.projectName]);
+
+  useEffect(() => {
+    const companyName = form.directCosts.projectInfo.companyName.trim();
+
+    if (!companyName) {
+      setCompanySuggestions([]);
+      setIsCompanySearching(false);
+      setCompanyHelperText(
+        "Ketik nama perusahaan untuk mencari data yang sudah ada dan mengisi kategori otomatis."
+      );
+      return;
+    }
+
+    setIsCompanySearching(true);
+    setCompanyHelperText("Mencari nama perusahaan yang sudah tersimpan...");
+
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `/api/company-directory?q=${encodeURIComponent(companyName)}`,
+          {
+            cache: "no-store",
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to search company directory.");
+        }
+
+        const payload = (await response.json()) as {
+          suggestions: CompanyDirectorySuggestion[];
+          exactMatch: CompanyDirectorySuggestion | null;
+        };
+
+        setCompanySuggestions(payload.suggestions ?? []);
+
+        if (payload.exactMatch) {
+          setForm((current) => ({
+            ...current,
+            directCosts: {
+              ...current.directCosts,
+              projectInfo: {
+                ...current.directCosts.projectInfo,
+                companyCategory: payload.exactMatch?.companyCategory ?? "",
+              },
+            },
+          }));
+          setCompanyHelperText("Perusahaan ditemukan di database. Kategori perusahaan diisi otomatis.");
+        } else {
+          setCompanyHelperText(
+            "Perusahaan belum ada di database. Pilih kategori perusahaan, lalu data akan disimpan saat tender disimpan."
+          );
+        }
+      } catch {
+        setCompanySuggestions([]);
+        setCompanyHelperText("Pencarian perusahaan gagal. Kamu masih bisa isi manual.");
+      } finally {
+        setIsCompanySearching(false);
+      }
+    }, 250);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [form.directCosts.projectInfo.companyName]);
 
   useEffect(() => {
     let isMounted = true;
@@ -625,6 +702,22 @@ export function TenderDashboard() {
         projectInfo: {
           ...current.directCosts.projectInfo,
           [field]: value,
+        },
+      },
+    }));
+  }
+
+  function selectCompanySuggestion(suggestion: CompanyDirectorySuggestion) {
+    setCompanySuggestions([]);
+    setCompanyHelperText("Perusahaan ditemukan di database. Kategori perusahaan diisi otomatis.");
+    setForm((current) => ({
+      ...current,
+      directCosts: {
+        ...current.directCosts,
+        projectInfo: {
+          ...current.directCosts.projectInfo,
+          companyName: suggestion.companyName,
+          companyCategory: suggestion.companyCategory,
         },
       },
     }));
@@ -1009,6 +1102,10 @@ export function TenderDashboard() {
                   onChange={setProjectInfo}
                   isProjectCategoryDetecting={isProjectCategoryDetecting}
                   projectCategoryHelperText={projectCategoryHelperText}
+                  companySuggestions={companySuggestions}
+                  isCompanySearching={isCompanySearching}
+                  companyHelperText={companyHelperText}
+                  onSelectCompanySuggestion={selectCompanySuggestion}
                   errors={{
                     projectName: getFirstIssueMessage(visibleCurrentStepIssues, "projectName"),
                     projectCategory: getFirstIssueMessage(

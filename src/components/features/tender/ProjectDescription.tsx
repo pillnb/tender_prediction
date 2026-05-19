@@ -10,11 +10,21 @@ import {
 import { cn } from "@/lib/utils";
 import type { CompanyCategory, ProjectCategory, ProjectInfoInput } from "@/types/tender";
 
+type CompanySuggestion = {
+  companyName: string;
+  companyCategory: CompanyCategory;
+  source?: string;
+};
+
 type ProjectDescriptionProps = {
   value: ProjectInfoInput;
   onChange: <K extends keyof ProjectInfoInput>(field: K, nextValue: ProjectInfoInput[K]) => void;
   isProjectCategoryDetecting?: boolean;
   projectCategoryHelperText?: string;
+  companySuggestions?: CompanySuggestion[];
+  isCompanySearching?: boolean;
+  companyHelperText?: string;
+  onSelectCompanySuggestion?: (suggestion: CompanySuggestion) => void;
   errors?: Partial<Record<keyof ProjectInfoInput, string>>;
 };
 
@@ -108,6 +118,10 @@ export function ProjectDescription({
   onChange,
   isProjectCategoryDetecting = false,
   projectCategoryHelperText,
+  companySuggestions = [],
+  isCompanySearching = false,
+  companyHelperText,
+  onSelectCompanySuggestion,
   errors,
 }: ProjectDescriptionProps) {
   return (
@@ -200,32 +214,53 @@ export function ProjectDescription({
 
         <div className="space-y-1.5">
           <label className="font-label-sm text-on-surface-variant">Nama Perusahaan</label>
-          <Input
-            className={cn(
-              "border-surface-container w-full rounded-lg",
-              errors?.companyName ? "border-error" : ""
-            )}
-            value={value.companyName}
-            onChange={(event) => onChange("companyName", event.target.value)}
-          />
+          <div className="relative">
+            <Input
+              className={cn(
+                "border-surface-container w-full rounded-lg",
+                errors?.companyName ? "border-error" : ""
+              )}
+              value={value.companyName}
+              onChange={(event) => onChange("companyName", event.target.value)}
+              autoComplete="off"
+            />
+            {companySuggestions.length > 0 ? (
+              <div className="bg-popover absolute z-30 mt-2 max-h-56 w-full overflow-y-auto rounded-2xl border border-black/8 p-2 shadow-xl">
+                {companySuggestions.map((suggestion) => (
+                  <button
+                    key={`${suggestion.companyName}-${suggestion.companyCategory}`}
+                    type="button"
+                    className="hover:bg-surface-container-low flex w-full items-start justify-between rounded-xl px-3 py-2 text-left"
+                    onClick={() => onSelectCompanySuggestion?.(suggestion)}
+                  >
+                    <span className="text-on-surface text-sm font-medium">
+                      {suggestion.companyName}
+                    </span>
+                    <span className="text-on-surface-variant text-xs">
+                      {getCompanyCategoryLabel(suggestion.companyCategory)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+          <div className="text-on-surface-variant flex items-center gap-2 text-xs">
+            {isCompanySearching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+            <span>
+              {companyHelperText ??
+                "Ketik nama perusahaan untuk mencari data yang sudah ada dan mengisi kategori otomatis."}
+            </span>
+          </div>
           <FieldError message={errors?.companyName} />
         </div>
 
         <div className="space-y-1.5">
           <label className="font-label-sm text-on-surface-variant">Kategori Perusahaan</label>
           <Select
-            value={
-              value.companyCategory ? getCompanyCategoryLabel(value.companyCategory) : undefined
+            value={value.companyCategory || undefined}
+            onValueChange={(nextValue) =>
+              onChange("companyCategory", nextValue as ProjectInfoInput["companyCategory"])
             }
-            onValueChange={(nextValue) => {
-              const selectedOption = companyCategoryOptions.find(
-                (option) => option.label === nextValue
-              );
-              onChange(
-                "companyCategory",
-                (selectedOption?.value ?? "") as ProjectInfoInput["companyCategory"]
-              );
-            }}
           >
             <SelectTrigger
               className={cn(
@@ -233,11 +268,13 @@ export function ProjectDescription({
                 errors?.companyCategory ? "border-error" : ""
               )}
             >
-              <SelectValue placeholder="Pilih Kategori Perusahaan" />
+              <SelectValue placeholder="Pilih Kategori Perusahaan">
+                {value.companyCategory ? getCompanyCategoryLabel(value.companyCategory) : null}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {companyCategoryOptions.map((option) => (
-                <SelectItem key={option.value} value={option.label}>
+                <SelectItem key={option.value} value={option.value}>
                   {option.label}
                 </SelectItem>
               ))}
