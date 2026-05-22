@@ -313,7 +313,7 @@ export function EstimationSummary({
               <div className="flex items-center gap-2">
                 <Bot className="text-primary h-5 w-5" />
                 <h4 className="text-on-surface text-lg font-bold">
-                  Experimental Machine Learning Benchmark
+                  Machine Learning Benchmark
                 </h4>
               </div>
               <p className="text-on-surface-variant mt-1 text-sm">
@@ -366,20 +366,20 @@ export function EstimationSummary({
                 )}
               />
             </div>
-            {aiBenchmark.hybrid.validationSummary ? (
+            {/* {aiBenchmark.hybrid.validationSummary ? (
               <div className="text-on-surface-variant mt-4 space-y-2 text-sm">
                 {aiBenchmark.hybrid.validationSummary ? (
                   <div>ML validation: {aiBenchmark.hybrid.validationSummary}</div>
                 ) : null}
               </div>
-            ) : null}
-            {aiBenchmark.hybrid.errorMessage ? (
+            ) : null} */}
+            {/* {aiBenchmark.hybrid.errorMessage ? (
               <div className="text-error mt-4 space-y-1 text-sm">
                 {aiBenchmark.hybrid.errorMessage ? (
                   <div>ML: {aiBenchmark.hybrid.errorMessage}</div>
                 ) : null}
               </div>
-            ) : null}
+            ) : null} */}
           </div>
         </div>
       </div>
