@@ -137,9 +137,6 @@ export function EstimationSummary({
               </div>
             </div>
           </div>
-          <div className="border-secondary/12 text-on-secondary-container bg-secondary-container/35 rounded-full border px-4 py-2 text-[11px] font-bold tracking-[0.12em] uppercase">
-            Experimental ML Benchmark
-          </div>
         </div>
 
         <div className="relative grid gap-10 xl:grid-cols-[1.1fr_0.9fr]">
