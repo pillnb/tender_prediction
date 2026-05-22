@@ -68,7 +68,7 @@ function TableSection({
   rows: string[][];
 }) {
   return (
-    <section className="glass-card print-card overflow-hidden rounded-[1.5rem] print:break-inside-avoid print:rounded-none print:border print:border-zinc-200 print:bg-white print:shadow-none">
+    <section className="glass-card print-card overflow-hidden rounded-[1.5rem] print:rounded-none print:border print:border-zinc-200 print:bg-white print:shadow-none">
       <div className="border-b border-black/5 px-6 py-5 print:px-0 print:py-3">
         <div className="text-on-surface text-lg font-bold">{title}</div>
         {subtitle ? <div className="text-on-surface-variant mt-1 text-sm">{subtitle}</div> : null}
@@ -139,7 +139,7 @@ export default async function TenderPrintPage({ params }: PageProps) {
 
       <main className="mx-auto max-w-6xl px-6 pb-12 print:px-0 print:pb-0">
         <div className="print-document print-sheet space-y-8">
-          <section className="print-hero glass-card-strong rounded-[2rem] px-8 py-8 print:break-inside-avoid print:rounded-none print:border print:border-zinc-300 print:bg-white print:px-0 print:py-0 print:shadow-none">
+          <section className="print-hero glass-card-strong rounded-[2rem] px-8 py-8 print:rounded-none print:border print:border-zinc-300 print:bg-white print:px-0 print:py-0 print:shadow-none">
             <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
               <div className="space-y-3">
                 <div className="text-primary text-xs font-semibold tracking-[0.14em] uppercase">
@@ -172,7 +172,7 @@ export default async function TenderPrintPage({ params }: PageProps) {
             </div>
           </section>
 
-          <section className="print-step glass-card rounded-[2rem] p-8 print:break-inside-avoid print:rounded-none print:border print:border-zinc-200 print:bg-white print:shadow-none">
+          <section className="print-step glass-card rounded-[2rem] p-8 print:rounded-none print:border print:border-zinc-200 print:bg-white print:shadow-none">
             <div className="mb-6">
               <div className="text-primary text-xs font-semibold tracking-[0.14em] uppercase">
                 Step 1
@@ -181,7 +181,7 @@ export default async function TenderPrintPage({ params }: PageProps) {
             </div>
 
             <div className="space-y-6">
-              <section className="print-card glass-card rounded-[1.5rem] p-6 print:break-inside-avoid print:rounded-none print:border print:border-zinc-200 print:bg-white print:shadow-none">
+              <section className="print-card glass-card rounded-[1.5rem] p-6 print:rounded-none print:border print:border-zinc-200 print:bg-white print:shadow-none">
                 <div className="text-on-surface mb-5 text-lg font-bold">Deskripsi Proyek</div>
                 <div className="grid gap-4">
                   <DataRow label="Nama Proyek" value={projectInfo.projectName || "-"} />
@@ -284,7 +284,7 @@ export default async function TenderPrintPage({ params }: PageProps) {
             </div>
           </section>
 
-          <section className="print-step glass-card rounded-[2rem] p-8 print:break-inside-avoid print:rounded-none print:border print:border-zinc-200 print:bg-white print:shadow-none">
+          <section className="print-step glass-card rounded-[2rem] p-8 print:rounded-none print:border print:border-zinc-200 print:bg-white print:shadow-none">
             <div className="mb-6">
               <div className="text-primary text-xs font-semibold tracking-[0.14em] uppercase">
                 Step 2
@@ -309,7 +309,7 @@ export default async function TenderPrintPage({ params }: PageProps) {
             </div>
           </section>
 
-          <section className="print-step glass-card rounded-[2rem] p-8 print:break-inside-avoid print:rounded-none print:border print:border-zinc-200 print:bg-white print:shadow-none">
+          <section className="print-step glass-card rounded-[2rem] p-8 print:rounded-none print:border print:border-zinc-200 print:bg-white print:shadow-none">
             <div className="mb-6">
               <div className="text-primary text-xs font-semibold tracking-[0.14em] uppercase">
                 Step 3
@@ -339,7 +339,7 @@ export default async function TenderPrintPage({ params }: PageProps) {
             </div>
           </section>
 
-          <section className="print-step glass-card rounded-[2rem] p-8 print:break-inside-avoid print:rounded-none print:border print:border-zinc-200 print:bg-white print:shadow-none">
+          <section className="print-step glass-card rounded-[2rem] p-8 print:rounded-none print:border print:border-zinc-200 print:bg-white print:shadow-none">
             <div className="mb-6">
               <div className="text-primary text-xs font-semibold tracking-[0.14em] uppercase">
                 Step 4
@@ -348,7 +348,7 @@ export default async function TenderPrintPage({ params }: PageProps) {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 print:gap-3">
-              <div className="rounded-[1.5rem] border border-black/5 bg-white p-5 print:break-inside-avoid print:rounded-none print:border-zinc-200 print:p-4">
+              <div className="rounded-[1.5rem] border border-black/5 bg-white p-5 print:rounded-none print:border-zinc-200 print:p-4">
                 <div className="text-on-surface-variant text-xs uppercase">
                   Subtotal Direct Cost
                 </div>
@@ -356,7 +356,7 @@ export default async function TenderPrintPage({ params }: PageProps) {
                   {formatIdr(summary.directCosts.directCostSubtotal)}
                 </div>
               </div>
-              <div className="rounded-[1.5rem] border border-black/5 bg-white p-5 print:break-inside-avoid print:rounded-none print:border-zinc-200 print:p-4">
+              <div className="rounded-[1.5rem] border border-black/5 bg-white p-5 print:rounded-none print:border-zinc-200 print:p-4">
                 <div className="text-on-surface-variant text-xs uppercase">Total Harga Akhir</div>
                 <div className="text-primary mt-2 text-2xl font-bold">
                   {formatIdr(summary.finalRoundedPrice)}
