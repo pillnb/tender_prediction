@@ -53,8 +53,8 @@ Target formal model adalah `Harga Sebelum Approval`.
   - Status saat ini: `limited`
 
 - `hybrid`
-  - Feature: `Year`, `Quarter`, `Month`, `Type of Client`, `Type of Project`, `EstimatedPriceLog`
-  - `EstimatedPriceLog` berasal dari `log1p(Harga)` pada data historis
+  - Feature: `TenderPriceLog`, `Year`, `Quarter`, `Month`, `Type of Client`, `Type of Project`
+  - `TenderPriceLog` berasal dari `log1p(Harga)` pada data historis
   - Saat runtime, feature ini disejajarkan dengan `log1p(ruleBasedEstimateBeforeApproval)`
   - Status saat ini: `limited`
 
@@ -62,27 +62,23 @@ Target formal model adalah `Harga Sebelum Approval`.
 
 Pipeline `ml_service/train_models.py` sekarang melakukan:
 
-- audit cleaning dataset
-- audit leakage `Harga` vs `Harga Sebelum Approval`
-- benchmark 3 model utama
-- time-series cross-validation
-- time-based final holdout
-- segment metrics per project type, client type, price band, year, dan quarter
+- load dataset extractor notebook dari `ml_service/resources/training_dataset.xlsx`
+- load `client_alias_mapping.xlsx` dan `client_type_mapping.xlsx`
+- bentuk `Type of Client` dan `Type of Project` sesuai notebook revisi
+- latih dua artifact runtime dengan hyperparameter SVR tetap dari notebook terbaru
+- simpan random holdout, group-aware cross-validation, dan temporal holdout ke artifact evaluasi
 
-### Candidate Model
+### Hyperparameter Runtime
 
-Model yang dibandingkan:
-
-- Linear Regression
-- SVR
-- Random Forest
+- `project_only`: `SVR(kernel="linear", C=1, epsilon=0.1, gamma="scale")`
+- `hybrid`: `SVR(kernel="linear", C=100, epsilon=0.1, gamma="scale")`
 
 ### Hasil Penting Saat Ini
 
 - Eksperimen awal notebook memilih `SVR` sebagai model terbaik.
-- Setelah pipeline direvisi agar selaras dengan runtime website dan dievaluasi ulang dengan protokol yang lebih ketat, artifact `hybrid` terbaik saat ini dipilih dari `Linear Regression`.
-- Namun, evaluasi residual terbaru menunjukkan `hybrid` belum mengalahkan baseline estimasi langsung, sehingga model lebih tepat diposisikan sebagai benchmark analitis daripada pengganti estimator utama.
-- Ini tidak membatalkan notebook awal, tetapi menunjukkan bahwa model terbaik bisa berubah ketika kontrak feature dan metodologi evaluasi diperketat.
+- Artifact runtime sekarang dipin langsung ke konfigurasi SVR notebook terbaru untuk dua skenario: tanpa tender price dan dengan tender price.
+- Mapping perusahaan di runtime mengikuti alias mapping dan `client_type_mapping.xlsx`, bukan fallback `companyCategory`.
+- Model benchmark tetap diberi status `limited` agar jelas bahwa rule-based calculator masih menjadi sumber harga utama.
 
 ## Artefak Evaluasi
 
@@ -100,10 +96,10 @@ Frontend tetap mengirim payload lengkap benchmark dari `src/lib/tenderCalculatio
 
 UI final summary sekarang juga menampilkan:
 
-- nama model
-- validation state
-- validation summary
-- variance terhadap hasil rule-based
+- nama model `project_only` dan `hybrid`
+- validation state masing-masing model
+- validation summary masing-masing model
+- variance tiap model terhadap hasil rule-based
 
 ## Quality Check
 

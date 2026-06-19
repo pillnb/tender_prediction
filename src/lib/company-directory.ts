@@ -4,7 +4,12 @@ import { prisma } from "@/lib/prisma";
 import type { CompanyCategory } from "@/types/tender";
 import * as XLSX from "xlsx";
 const companyPrisma = prisma as unknown as PrismaClient;
-const COMPANY_MAPPING_FILE = path.join(process.cwd(), "Mapping_Client_BKI_Fix.xlsx");
+const CLIENT_TYPE_MAPPING_FILE = path.join(
+  process.cwd(),
+  "ml_service",
+  "resources",
+  "client_type_mapping.xlsx"
+);
 
 const CLIENT_TYPE_TO_CATEGORY: Record<string, CompanyCategory> = {
   MIGAS: "migas",
@@ -44,7 +49,7 @@ function mapClientTypeToCategory(value: unknown): CompanyCategory | null {
 }
 
 export function loadCompanyDirectoryWorkbookRows() {
-  const workbook = XLSX.readFile(COMPANY_MAPPING_FILE);
+  const workbook = XLSX.readFile(CLIENT_TYPE_MAPPING_FILE);
   const firstSheetName = workbook.SheetNames[0];
 
   if (!firstSheetName) {
@@ -64,8 +69,8 @@ export function loadCompanyDirectoryWorkbookRows() {
   >();
 
   for (const row of rows) {
-    const companyName = String(row.Perusahaan ?? "").trim();
-    const companyCategory = mapClientTypeToCategory(row["Type of Client"]);
+    const companyName = String(row.client_name_standardized ?? "").trim();
+    const companyCategory = mapClientTypeToCategory(row.type_of_client);
 
     if (!companyName || !companyCategory) {
       continue;
@@ -78,7 +83,7 @@ export function loadCompanyDirectoryWorkbookRows() {
         companyName,
         normalizedName,
         companyCategory,
-        source: "mapping_client_bki_fix",
+        source: "client_type_mapping",
       });
     }
   }

@@ -565,12 +565,18 @@ export function TenderDashboard() {
 
       setAiBenchmark({
         ...computed.aiBenchmark,
+        projectOnly: {
+          ...computed.aiBenchmark.projectOnly,
+          status: "error",
+          errorMessage,
+        },
         hybrid: {
           ...computed.aiBenchmark.hybrid,
           status: "error",
           errorMessage,
         },
         errors: {
+          project_only: errorMessage,
           hybrid: errorMessage,
         },
       });
@@ -604,6 +610,7 @@ export function TenderDashboard() {
     if (
       step === "final-summary" &&
       computed.aiBenchmark.bestAvailable === null &&
+      computed.aiBenchmark.projectOnly.status === "idle" &&
       computed.aiBenchmark.hybrid.status === "idle"
     ) {
       triggerAsync(() => {

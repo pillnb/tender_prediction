@@ -4,13 +4,22 @@ import { listTenderCalculations } from "@/lib/tender-repository";
 
 export const dynamic = "force-dynamic";
 
+function isBuildTimeRender() {
+  return (
+    process.env["NEXT_PHASE"] === "phase-production-build" ||
+    process.env["__NEXT_PRIVATE_BUILD_WORKER"] === "1"
+  );
+}
+
 export default async function ArchivedPage() {
-  const records = await listTenderCalculations({
-    includeArchived: true,
-  }).catch((error) => {
-    console.error("Failed to load archived tender calculations.", error);
-    return [];
-  });
+  const records = isBuildTimeRender()
+    ? []
+    : await listTenderCalculations({
+        includeArchived: true,
+      }).catch((error) => {
+        console.error("Failed to load archived tender calculations.", error);
+        return [];
+      });
 
   return (
     <div className="bg-background text-on-background min-h-screen">

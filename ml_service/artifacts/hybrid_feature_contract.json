@@ -1,46 +1,55 @@
 {
   "model_key": "hybrid",
-  "display_name": "Hybrid Benchmark",
-  "model_version": "ml-benchmark-validation-v3",
-  "schema_version": "runtime-feature-schema-v3",
+  "display_name": "SVR Hybrid Benchmark",
+  "model_version": "svr-notebook-aligned-v1",
+  "schema_version": "runtime-feature-schema-v4",
   "runtime_feature_keys": [
+    "TenderPriceLog",
     "Year",
     "Quarter",
     "Month",
     "Type of Client",
-    "Type of Project",
-    "EstimatedPriceLog"
+    "Type of Project"
   ],
   "numeric_features": [
+    "TenderPriceLog",
     "Year",
     "Quarter",
-    "Month",
-    "EstimatedPriceLog"
+    "Month"
   ],
   "categorical_features": [
     "Type of Client",
     "Type of Project"
   ],
   "feature_semantics": {
-    "Year": "Tahun dari Tgl. Penawaran / workDate",
-    "Quarter": "Kuartal dari Tgl. Penawaran / workDate",
-    "Month": "Bulan dari Tgl. Penawaran / workDate",
-    "Type of Client": "Kategori client hasil mapping perusahaan / companyCategory",
-    "Type of Project": "Kategori proyek hasil klasifikasi pekerjaan / projectCategory",
-    "EstimatedPriceLog": "log1p dari kolom Harga historis, disejajarkan dengan log1p(ruleBasedEstimateBeforeApproval) saat runtime"
+    "TenderPriceLog": "log1p(Harga) historis yang disejajarkan dengan log1p(ruleBasedEstimateBeforeApproval) saat runtime.",
+    "Year": "Tahun dari offer_date_final atau workDate runtime.",
+    "Quarter": "Kuartal dari offer_date_final atau workDate runtime.",
+    "Month": "Bulan dari offer_date_final atau workDate runtime.",
+    "Type of Client": "Type of Client dari alias mapping dan client_type_mapping notebook.",
+    "Type of Project": "Type of Project hasil PROJECT_RULES notebook dari projectName."
   },
   "runtime_enabled": true,
   "validation_state": "limited",
-  "validation_summary": "Model mengungguli baseline median, tetapi belum mengalahkan baseline estimasi langsung.",
-  "chosen_model_family": "linear_regression",
+  "validation_summary": "Model SVR hybrid telah disejajarkan ke notebook terbaru dan tetap diposisikan sebagai benchmark terbatas.",
+  "chosen_model_family": "svr_linear",
   "holdout_metrics": {
-    "mae": 858625.1715920189,
-    "rmse": 3083112.9421888697,
-    "mape": 0.02766533562007387,
-    "r2": 0.9964626315920831,
-    "median_absolute_error": 136130.881264559,
-    "within_10pct_ratio": 0.9230769230769231,
-    "within_20pct_ratio": 0.9615384615384616,
-    "within_30pct_ratio": 0.9711538461538461
-  }
+    "mae": 6277827.606116741,
+    "rmse": 19247217.975163933,
+    "mape": 0.20720829527486145,
+    "r2": 0.9300431991559677,
+    "median_absolute_error": 1077112.5414465517,
+    "within_10pct_ratio": 0.723404255319149,
+    "within_20pct_ratio": 0.8156028368794326,
+    "within_30pct_ratio": 0.851063829787234
+  },
+  "scenario_id": "with_tender_price",
+  "scenario_label": "ML Dengan Tender Price",
+  "hyperparameters": {
+    "kernel": "linear",
+    "C": 100.0,
+    "epsilon": 0.1,
+    "gamma": "scale"
+  },
+  "source_notebook": "revisi_price_prediction_using_extracted_data.ipynb"
 }

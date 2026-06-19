@@ -13,16 +13,43 @@ import numpy as np
 import pandas as pd
 
 ARTIFACTS_DIR = Path(__file__).resolve().parents[1] / "artifacts"
+SERVICE_ROOT = Path(__file__).resolve().parents[1]
 MODULE_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_DATASET_FILENAME = "tender_fix.xlsx"
-DEFAULT_CLIENT_MAPPING_FILENAME = "Mapping_Client_BKI_Fix.xlsx"
-MODEL_VERSION = "ml-benchmark-validation-v3"
+RESOURCES_DIR = SERVICE_ROOT / "resources"
+
+DEFAULT_DATASET_FILENAME = "training_dataset.xlsx"
+DEFAULT_ALIAS_MAPPING_FILENAME = "client_alias_mapping.xlsx"
+DEFAULT_CLIENT_TYPE_MAPPING_FILENAME = "client_type_mapping.xlsx"
+
+LEGACY_DATASET_FILENAMES = ["dataset_batch2.xlsx", "bki_tender_training_2023_2025.xlsx"]
+MODEL_VERSION = "svr-notebook-aligned-v1"
 TARGET_NAME = "harga_sebelum_approval"
-FEATURE_SCHEMA_VERSION = "runtime-feature-schema-v3"
+FEATURE_SCHEMA_VERSION = "runtime-feature-schema-v4"
+TRAINING_CUTOFF_DATE = pd.Timestamp("2026-01-01")
+NOTEBOOK_SOURCE = "revisi_price_prediction_using_extracted_data.ipynb"
+
+NOTEBOOK_SVR_CONFIGS: dict[str, dict[str, Any]] = {
+    "project_only": {
+        "kernel": "linear",
+        "C": 1.0,
+        "epsilon": 0.1,
+        "gamma": "scale",
+        "scenario_id": "without_tender_price",
+        "scenario_label": "ML Tanpa Tender Price",
+    },
+    "hybrid": {
+        "kernel": "linear",
+        "C": 100.0,
+        "epsilon": 0.1,
+        "gamma": "scale",
+        "scenario_id": "with_tender_price",
+        "scenario_label": "ML Dengan Tender Price",
+    },
+}
 
 MODEL_DISPLAY_NAMES = {
-    "project_only": "Project-Only Benchmark",
-    "hybrid": "ML SVR Benchmark",
+    "project_only": "SVR Project-Only Benchmark",
+    "hybrid": "SVR Hybrid Benchmark",
 }
 
 MODEL_FEATURE_SPECS: dict[str, dict[str, Any]] = {
@@ -32,141 +59,427 @@ MODEL_FEATURE_SPECS: dict[str, dict[str, Any]] = {
         "categorical_features": ["Type of Client", "Type of Project"],
         "runtime_feature_keys": ["Year", "Quarter", "Month", "Type of Client", "Type of Project"],
         "feature_semantics": {
-            "Year": "Tahun dari Tgl. Penawaran / workDate",
-            "Quarter": "Kuartal dari Tgl. Penawaran / workDate",
-            "Month": "Bulan dari Tgl. Penawaran / workDate",
-            "Type of Client": "Kategori client hasil mapping perusahaan / companyCategory",
-            "Type of Project": "Kategori proyek hasil klasifikasi pekerjaan / projectCategory",
+            "Year": "Tahun dari offer_date_final atau workDate runtime.",
+            "Quarter": "Kuartal dari offer_date_final atau workDate runtime.",
+            "Month": "Bulan dari offer_date_final atau workDate runtime.",
+            "Type of Client": "Type of Client dari alias mapping dan client_type_mapping notebook.",
+            "Type of Project": "Type of Project hasil PROJECT_RULES notebook dari projectName.",
         },
-        "trainable_from_historical_data": True,
-        "validation_state": "limited",
+        "scenario_id": "without_tender_price",
     },
     "hybrid": {
         "display_name": MODEL_DISPLAY_NAMES["hybrid"],
-        "numeric_features": [
-            "Year",
-            "Quarter",
-            "Month",
-            "EstimatedPriceLog",
-        ],
+        "numeric_features": ["TenderPriceLog", "Year", "Quarter", "Month"],
         "categorical_features": ["Type of Client", "Type of Project"],
         "runtime_feature_keys": [
+            "TenderPriceLog",
             "Year",
             "Quarter",
             "Month",
             "Type of Client",
             "Type of Project",
-            "EstimatedPriceLog",
         ],
         "feature_semantics": {
-            "Year": "Tahun dari Tgl. Penawaran / workDate",
-            "Quarter": "Kuartal dari Tgl. Penawaran / workDate",
-            "Month": "Bulan dari Tgl. Penawaran / workDate",
-            "Type of Client": "Kategori client hasil mapping perusahaan / companyCategory",
-            "Type of Project": "Kategori proyek hasil klasifikasi pekerjaan / projectCategory",
-            "EstimatedPriceLog": "log1p dari kolom Harga historis, disejajarkan dengan log1p(ruleBasedEstimateBeforeApproval) saat runtime",
+            "TenderPriceLog": "log1p(Harga) historis yang disejajarkan dengan log1p(ruleBasedEstimateBeforeApproval) saat runtime.",
+            "Year": "Tahun dari offer_date_final atau workDate runtime.",
+            "Quarter": "Kuartal dari offer_date_final atau workDate runtime.",
+            "Month": "Bulan dari offer_date_final atau workDate runtime.",
+            "Type of Client": "Type of Client dari alias mapping dan client_type_mapping notebook.",
+            "Type of Project": "Type of Project hasil PROJECT_RULES notebook dari projectName.",
         },
-        "trainable_from_historical_data": True,
-        "validation_state": "limited",
+        "scenario_id": "with_tender_price",
     },
 }
 
-COMPANY_CATEGORY_TO_CLIENT_TYPE = {
-    "migas": "MIGAS",
-    "minerba": "MINERBA",
-    "ebtke": "EBTKE",
-    "kelistrikan": "KELISTRIKAN",
-    "nakertrans": "NAKERTRANS",
-    "dephub": "DEPHUB",
-    "perindustrian": "PERINDUSTRIAN",
-    "bki": "BKI",
-    "lain-lain": "LAIN LAIN",
+ALLOWED_CLIENT_TYPES = {
+    "MIGAS",
+    "MINERBA",
+    "EBTKE",
+    "KELISTRIKAN",
+    "NAKERTRANS",
+    "DEPHUB",
+    "PERINDUSTRIAN",
+    "BKI",
+    "LAIN-LAIN",
 }
 
-PROJECT_CATEGORY_TO_TYPE = {
-    "pemetaan": "Pemetaan",
-    "survey": "Survey/Identifikasi/Inventarisasi",
-    "inspeksi": "Inspeksi",
-    "assessment": "Assessment",
-    "audit": "Audit",
-    "pengujian": "Pengujian",
-    "pengujian_lab": "Pengujian Laboratorium",
-    "monitoring": "Monitoring",
-    "supervisi": "Supervisi",
-    "konsultansi": "Konsultansi",
-    "sertifikasi": "Sertifikasi",
-    "training": "Training",
-    "labor_survey": "Labor Survey",
-}
-
-PROJECT_CATEGORY_RULES = {
-    "Pengujian Laboratorium": ["laboratorium", "lab test", "uji lab", "analysis lab"],
-    "Labor Survey": ["labor survey", "pengerahan tenaga", "supply personil"],
-    "Survey/Identifikasi/Inventarisasi": [
-        "survey",
-        "identifikasi",
-        "inventarisasi",
-        "pendataan",
-        "mapping",
-    ],
-    "Pemetaan": ["pemetaan", "bathymetry", "topografi", "gis"],
-    "Inspeksi": [
-        "inspeksi",
-        "inspection",
-        "pemeriksaan",
-        "ndt",
-        "underwater",
-        "annual",
-        "tanki",
-        "tank",
-        "vessel",
-        "ut",
-        "crane",
-        "lifting",
-        "gear",
-        "wire",
-        "hoist",
-        "kapal",
-        "marine",
-        "tug",
-        "cst",
-    ],
-    "Sertifikasi": [
-        "sertifikasi",
-        "certification",
-        "re-sertifikasi",
-        "sertifikat",
-        "migas",
-        "riksa uji",
-        "plo",
-        "coi",
-        "certificate",
-        "slo",
-        "slf",
-    ],
-    "Pengujian": [
-        "pengujian",
-        "testing",
-        "commissioning",
-        "load test",
-        "test",
-        "kalibrasi",
-        "calibration",
-        "tera",
-        "bollard",
-        "pull",
-        "fuel",
-        "consumption",
-        "fct",
-        "psv",
-    ],
-    "Assessment": ["assessment", "kajian", "studi kelayakan", "evaluasi teknis"],
-    "Audit": ["audit", "verifikasi", "penelaahan", "rla"],
-    "Monitoring": ["monitoring", "pemantauan", "pengawasan berkala"],
-    "Supervisi": ["supervisi", "supervision", "pengawasan konstruksi"],
-    "Konsultansi": ["konsultansi", "consultancy", "advisory", "jasa konsultansi"],
-    "Training": ["training", "pelatihan", "workshop", "sosialisasi"],
-}
+PROJECT_RULES: list[tuple[str, list[str]]] = [
+    (
+        "TRAINING",
+        [
+            "training",
+            "pelatihan",
+            "workshop",
+            "bimtek",
+            "sosialisasi",
+            "awareness",
+            "awarness",
+            "integreted management",
+            "integrated management",
+            "management system",
+        ],
+    ),
+    (
+        "KONSULTANSI",
+        [
+            "konsultansi",
+            "consulting",
+            "consultancy",
+            "pendampingan",
+            "advisory",
+            "jasa konsultasi",
+        ],
+    ),
+    (
+        "SUPERVISI",
+        [
+            "supervisi",
+            "supervision",
+            "pengawasan",
+            "monitoring",
+            "manajemen proyek",
+            "project management",
+        ],
+    ),
+    (
+        "ENGINEERING",
+        [
+            "engineering",
+            "design",
+            "desain",
+            "detail engineering",
+            "ded",
+            "perencanaan",
+            "instalasi",
+            "installation",
+            "gambar",
+            "drawing",
+            "revisi gambar",
+            "gambar teknik",
+            "technical drawing",
+            "as built drawing",
+            "arrangement drawing",
+            "general arrangement",
+            "layout",
+            "mooring analysis",
+            "mooring",
+            "safety plan",
+            "perhitungan",
+            "calculation",
+            "stability",
+            "stabilitas",
+            "re engineering",
+            "re-engineering",
+            "re engeenering",
+            "kalkulasi",
+            "trim list",
+            "pembuatan trim list",
+            "repair",
+            "required repair",
+            "perbaikan",
+            "material substitusi",
+            "substitusi material",
+        ],
+    ),
+    (
+        "ASSESSMENT",
+        [
+            "assessment",
+            "assesment",
+            "audit",
+            "kajian",
+            "studi",
+            "study",
+            "verifikasi",
+            "verification",
+            "review",
+            "evaluasi",
+            "rla",
+            "remaining life assessment",
+            "condition assessment",
+            "fitness for service",
+            "ffs",
+            "risk assessment",
+            "hazop",
+            "hazid",
+        ],
+    ),
+    (
+        "SERTIFIKASI",
+        [
+            "sertifikasi",
+            "certification",
+            "certificate",
+            "sertifikat",
+            "cert",
+            "coi",
+            "coc",
+            "coa",
+            "slo",
+            "skpp",
+            "socpf",
+            "approval",
+            "resertifikasi",
+            "re sertifikasi",
+            "re-sertifikasi",
+            "perpanjangan",
+            "endorse",
+            "endorsement",
+            "hubla",
+            "disnaker",
+            "statutory",
+            "class",
+            "classification",
+            "klasifikasi",
+            "ijin",
+            "izin",
+            "perizinan",
+            "ijin lingkungan",
+            "izin lingkungan",
+            "ijin titik koordinat",
+            "izin titik koordinat",
+            "plo",
+            "persetujuan layak operasi",
+            "layak operasi",
+        ],
+    ),
+    (
+        "PENGUJIAN",
+        [
+            "pengujian",
+            "uji",
+            "testing",
+            "test",
+            "tester",
+            "pengetesan",
+            "pengetesan ulang",
+            "hydrotest",
+            "hydro test",
+            "hydrostatic",
+            "pressure test",
+            "leak test",
+            "load test",
+            "loadtest",
+            "uji beban",
+            "proof load",
+            "function test",
+            "functional test",
+            "load function",
+            "load & function",
+            "kalibrasi",
+            "kalibrasu",
+            "calibration",
+            "tera",
+            "laboratorium",
+            "lab",
+            "commissioning",
+            "radiografi",
+            "radiography",
+            "xray",
+            "x-ray",
+            "ut",
+            "utm",
+            "ultrasonic",
+            "mpi",
+            "magnetic particle",
+            "dpi",
+            "dye penetrant",
+            "ndt",
+            "fct",
+            "fuel consumption",
+            "fuel oil consumption",
+            "foc",
+            "wire rope test",
+            "wire rope tester",
+            "lifting test",
+            "cargo handling test",
+            "main engine",
+            "genset",
+            "generator set",
+            "pengukuran",
+            "analisa lingkungan",
+            "lingkungan kerja",
+            "hygene",
+            "hygiene",
+            "grounding",
+            "earthing",
+            "lightning protection",
+            "lightning rod",
+            "arrestor",
+            "pressure gauge",
+            "presure gauge",
+            "pressure indicator",
+            "presure indicator",
+            "gage",
+            "gauge",
+            "flowmeter",
+            "flow meter",
+            "water flowmeter",
+            "fat",
+            "factory acceptance test",
+            "switchgear",
+            "lv switchgear",
+            "panel switchgear",
+            "main switch board",
+            "msb",
+            "trafo",
+            "konsumsi bbm",
+        ],
+    ),
+    (
+        "SEWA/PERALATAN",
+        [
+            "sewa",
+            "rental",
+            "penyewaan",
+            "hire",
+            "water bag",
+            "alat",
+            "equipment",
+            "peralatan",
+            "tools",
+            "operator",
+            "pengadaan",
+            "pengadaan material",
+            "material",
+            "spare",
+            "spare part",
+            "aksesoris",
+            "air dryer",
+            "jack pallet",
+            "pallet",
+            "shelving rack",
+            "rack",
+            "rubber hose",
+            "rubber house",
+            "hose",
+            "swamp excavator",
+            "excavator",
+            "xcmg",
+            "top loader",
+            "corner casting",
+            "curing tyre",
+        ],
+    ),
+    (
+        "INSPEKSI",
+        [
+            "inspeksi",
+            "inspection",
+            "pemeriksaan",
+            "survey",
+            "survei",
+            "visual",
+            "annual",
+            "intermediate",
+            "renewal",
+            "special survey",
+            "condition survey",
+            "underwater",
+            "diving",
+            "rov",
+            "3rd party",
+            "third party",
+            "third-party",
+            "jasa marine",
+            "marine",
+            "jasa maritim",
+            "kapal",
+            "vessel",
+            "tugboat",
+            "tug boat",
+            "tongkang",
+            "barge",
+            "psv",
+            "ahts",
+            "sea truck",
+            "offshore",
+            "crane",
+            "boiler",
+            "pressure vessel",
+            "bejana tekan",
+            "separator",
+            "tangki",
+            "pipeline",
+            "pipa",
+            "struktur",
+            "hull",
+            "manifold",
+            "bop",
+            "prv",
+            "lifting gear",
+            "lifting equipment",
+            "lifting appliance",
+            "loose gear",
+            "lifting",
+            "alat angkat",
+            "alat bantu angkat",
+            "rigging",
+            "sling",
+            "hook",
+            "chain block",
+            "padeye",
+            "pad eye",
+            "shackle",
+            "scan",
+            "scanning",
+            "3d scan",
+            "laser scan",
+            "bushing",
+            "desalter",
+            "heat exchanger",
+            "exchanger",
+            "surface condenser",
+            "surface condensor",
+            "condenser",
+            "condensor",
+            "inpeksi",
+            "inspect",
+            "inspektur",
+            "qc inspektur",
+            "tank",
+            "tanki",
+            "bulk tank",
+            "bulktank",
+            "silo",
+            "fuel tank",
+            "cargo tank",
+            "bbm tank",
+            "main tank",
+            "maintank",
+            "pump",
+            "pompa",
+            "valve",
+            "safety valve",
+            "pressure safety valve",
+            "psv",
+            "prv",
+            "trv",
+            "strainer",
+            "wire rope",
+            "tow wire",
+            "wire rope clamp",
+            "shackel",
+            "a frame",
+            "swl",
+            "bollard",
+            "anchor winch",
+            "tugger winch",
+            "winch",
+            "crown block",
+            "forklift",
+            "portal gantry",
+            "gantry",
+            "lct",
+            "docking",
+            "propeller",
+            "steering gear",
+            "rig",
+            "ccu",
+            "spudcan",
+        ],
+    ),
+]
 
 
 @dataclass
@@ -179,11 +492,14 @@ class ModelArtifacts:
 def get_model_feature_spec(model_key: str) -> dict[str, Any]:
     if model_key not in MODEL_FEATURE_SPECS:
         raise KeyError(f"Unknown model key '{model_key}'.")
-
     return MODEL_FEATURE_SPECS[model_key]
 
 
-def resolve_project_file(filename: str, env_var_name: str) -> Path:
+def resolve_resource_file(
+    filename: str,
+    env_var_name: str,
+    legacy_filenames: list[str] | None = None,
+) -> Path:
     configured_path = os.getenv(env_var_name)
     candidate_paths: list[Path] = []
 
@@ -191,14 +507,17 @@ def resolve_project_file(filename: str, env_var_name: str) -> Path:
         configured = Path(configured_path)
         candidate_paths.append(configured if configured.is_absolute() else Path.cwd() / configured)
 
-    candidate_paths.extend(
-        [
-            Path.cwd() / filename,
-            MODULE_ROOT / filename,
-            MODULE_ROOT.parent / filename,
-            ARTIFACTS_DIR.parent / filename,
-        ]
-    )
+    resource_names = [filename, *(legacy_filenames or [])]
+    for resource_name in resource_names:
+        candidate_paths.extend(
+            [
+                RESOURCES_DIR / resource_name,
+                Path.cwd() / resource_name,
+                MODULE_ROOT / resource_name,
+                MODULE_ROOT.parent / resource_name,
+                SERVICE_ROOT / resource_name,
+            ]
+        )
 
     seen_paths: set[Path] = set()
     unique_candidates: list[Path] = []
@@ -220,87 +539,271 @@ def resolve_project_file(filename: str, env_var_name: str) -> Path:
     )
 
 
+def resolve_dataset_path(path: Path | None = None) -> Path:
+    if path is not None:
+        return path
+    return resolve_resource_file(
+        DEFAULT_DATASET_FILENAME,
+        "ML_TRAINING_DATASET_PATH",
+        legacy_filenames=LEGACY_DATASET_FILENAMES,
+    )
+
+
+def resolve_alias_mapping_path(path: Path | None = None) -> Path:
+    if path is not None:
+        return path
+    return resolve_resource_file(
+        DEFAULT_ALIAS_MAPPING_FILENAME,
+        "ML_CLIENT_ALIAS_MAPPING_PATH",
+        legacy_filenames=["client_alias_mapping.xlsx"],
+    )
+
+
+def resolve_client_type_mapping_path(path: Path | None = None) -> Path:
+    if path is not None:
+        return path
+    return resolve_resource_file(
+        DEFAULT_CLIENT_TYPE_MAPPING_FILENAME,
+        "ML_CLIENT_TYPE_MAPPING_PATH",
+        legacy_filenames=["client_type_mapping.xlsx"],
+    )
+
+
 def sha256_for_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def clean_harga_final(nilai: Any) -> float | np.nan:
-    if pd.isna(nilai):
-        return np.nan
-
-    teks = str(nilai).strip()
-
-    try:
-        return float(teks)
-    except ValueError:
-        pass
-
-    teks = teks.replace("Rp", "").replace("IDR", "").strip()
-
-    if re.search(r",\d{1,2}$", teks) and not re.search(r"\.", teks):
-        teks = teks.replace(".", "")
-        teks = teks.replace(",", ".")
-    else:
-        teks = teks.replace(".", "").replace(",", "")
-
-    try:
-        return float(teks)
-    except ValueError:
-        return np.nan
+def normalize_space(value: Any) -> str:
+    if value is None:
+        return ""
+    text = str(value).strip()
+    text = re.sub(r"[\r\n\t]+", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
 
 
-def classify_project(text: str | None, project_category: str | None = None) -> str:
-    text_clean = (text or "").lower()
+def clean_project_text(text: Any) -> str:
+    normalized = normalize_space(text).lower()
+    normalized = re.sub(r"[^a-z0-9\s/\-&]", " ", normalized)
+    return re.sub(r"\s+", " ", normalized).strip()
 
-    for category, keywords in PROJECT_CATEGORY_RULES.items():
-        if any(keyword in text_clean for keyword in keywords):
-            return category
 
-    if project_category:
-        return PROJECT_CATEGORY_TO_TYPE.get(project_category, "LAIN-LAIN")
+def clean_client_name_basic(text: Any) -> str:
+    normalized = normalize_space(text).lower()
+    normalized = normalized.replace("&", " dan ")
+    normalized = re.sub(r"[^a-z0-9\s]", " ", normalized)
+    normalized = re.sub(r"\bpersero\b", " ", normalized)
+    normalized = re.sub(r"\btbk\b", " ", normalized)
+    return re.sub(r"\s+", " ", normalized).strip()
+
+
+def standardized_title(text: Any) -> str:
+    normalized = clean_client_name_basic(text)
+    if not normalized:
+        return ""
+
+    uppercase_tokens = {"pt", "cv", "bki", "pln", "pgn", "skk", "bp", "phm", "phe", "kkks", "esdm"}
+    converted = [word.upper() if word in uppercase_tokens else word.capitalize() for word in normalized.split()]
+    return " ".join(converted)
+
+
+def keyword_in_text(text: str, pattern: str) -> bool:
+    return re.search(re.escape(pattern.lower()), text) is not None
+
+
+def classify_project(text: str | None, _project_category: str | None = None) -> str:
+    text_clean = clean_project_text(text)
+    if not text_clean:
+        return "LAIN-LAIN"
+
+    for label, patterns in PROJECT_RULES:
+        for pattern in patterns:
+            if keyword_in_text(text_clean, pattern):
+                return label
 
     return "LAIN-LAIN"
 
 
-def load_client_mapping(path: Path | None = None) -> dict[str, str]:
-    mapping_path = path or resolve_project_file(
-        DEFAULT_CLIENT_MAPPING_FILENAME,
-        "ML_CLIENT_MAPPING_PATH",
+def clean_price_value(value: Any) -> float | np.nan:
+    if pd.isna(value):
+        return np.nan
+
+    if isinstance(value, (int, float, np.integer, np.floating)):
+        numeric = float(value)
+        return numeric if np.isfinite(numeric) else np.nan
+
+    text = str(value).strip()
+    if not text:
+        return np.nan
+
+    try:
+        return float(text)
+    except ValueError:
+        pass
+
+    text = text.replace("Rp", "").replace("IDR", "").replace("rupiah", "").strip()
+
+    if re.search(r",\d{1,2}$", text) and not re.search(r"\.", text):
+        text = text.replace(".", "")
+        text = text.replace(",", ".")
+    else:
+        text = text.replace(".", "").replace(",", "")
+
+    try:
+        return float(text)
+    except ValueError:
+        return np.nan
+
+
+def normalize_identifier_text(value: Any) -> str:
+    text = normalize_space(value).lower()
+    text = re.sub(r"\brev(?:isi)?[-\s]?\d+\b", " ", text)
+    text = re.sub(r"[^a-z0-9]+", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def normalize_offer_no(value: Any) -> str:
+    text = normalize_space(value).upper()
+    text = re.sub(r"\bREV(?:ISI)?[-\s]?\d+\b", "", text)
+    text = re.sub(r"\(.*?REV.*?\)", "", text)
+    text = re.sub(r"[^A-Z0-9/.-]+", "", text)
+    if text in {"", "NAN", "NONE", "-", "--", "MOU"}:
+        return ""
+    return text
+
+
+def first_non_empty_text(*values: Any) -> str:
+    for value in values:
+        if value is None:
+            continue
+        try:
+            if pd.isna(value):
+                continue
+        except Exception:
+            pass
+        text = normalize_space(value)
+        if text and text.upper() not in {"NAN", "NONE", "<NA>"}:
+            return text
+    return ""
+
+
+def build_tender_group_id(row: pd.Series) -> str:
+    offer_no_norm = normalize_offer_no(row.get("offer_no"))
+    client_value = first_non_empty_text(row.get("client_name_clean"), row.get("client_name"))
+    project_value = first_non_empty_text(row.get("project_name_clean"), row.get("project_name"))
+    client_norm = normalize_identifier_text(client_value)
+    project_norm = normalize_identifier_text(project_value)
+    offer_date = pd.to_datetime(row.get("offer_date_final"), errors="coerce")
+    date_token = offer_date.strftime("%Y-%m") if pd.notna(offer_date) else "unknown-date"
+
+    if offer_no_norm and client_norm:
+        return f"OFFER::{offer_no_norm}::{client_norm}"
+    if offer_no_norm:
+        return f"OFFER::{offer_no_norm}"
+    return f"FALLBACK::{client_norm or 'unknown-client'}::{project_norm or 'unknown-project'}::{date_token}"
+
+
+def load_alias_mapping(path: Path | None = None) -> dict[str, str]:
+    mapping_path = resolve_alias_mapping_path(path)
+    mapping = pd.read_excel(mapping_path)
+    mapping.columns = [str(column).strip() for column in mapping.columns]
+
+    rename: dict[str, str] = {}
+    for column in mapping.columns:
+        lowered = column.lower().strip()
+        if lowered in {"client_name", "client_name_raw", "perusahaan", "nama perusahaan mentah"}:
+            rename[column] = "client_name_raw"
+        elif lowered in {"client_name_clean", "client_name_clean_basic", "nama perusahaan clean", "nama clean"}:
+            rename[column] = "client_name_clean"
+        elif lowered in {"client_name_standardized", "standardized", "nama perusahaan standar", "perusahaan standar"}:
+            rename[column] = "client_name_standardized"
+
+    mapping = mapping.rename(columns=rename)
+
+    if "client_name_clean" not in mapping.columns:
+        if "client_name_raw" not in mapping.columns:
+            raise ValueError(
+                "Alias mapping harus memiliki kolom client_name_clean/client_name_clean_basic atau client_name_raw."
+            )
+        mapping["client_name_clean"] = mapping["client_name_raw"].apply(clean_client_name_basic)
+
+    if "client_name_standardized" not in mapping.columns:
+        raise ValueError("Alias mapping harus memiliki kolom client_name_standardized.")
+
+    mapping = mapping.dropna(subset=["client_name_clean", "client_name_standardized"]).copy()
+    mapping["client_name_clean"] = mapping["client_name_clean"].apply(clean_client_name_basic)
+    mapping["client_name_standardized"] = mapping["client_name_standardized"].astype(str).str.strip()
+    mapping = mapping[mapping["client_name_clean"] != ""]
+    mapping = mapping[mapping["client_name_standardized"] != ""]
+    mapping = mapping.drop_duplicates(subset=["client_name_clean"], keep="first")
+
+    return dict(
+        zip(
+            mapping["client_name_clean"].tolist(),
+            mapping["client_name_standardized"].tolist(),
+            strict=True,
+        )
     )
-    df = pd.read_excel(mapping_path)
 
-    if "Perusahaan" not in df.columns or "Type of Client" not in df.columns:
-        raise ValueError("Client mapping file must contain 'Perusahaan' and 'Type of Client'.")
 
-    return dict(zip(df["Perusahaan"].astype(str).str.lower(), df["Type of Client"].astype(str)))
+def load_client_type_mapping(path: Path | None = None) -> dict[str, str]:
+    mapping_path = resolve_client_type_mapping_path(path)
+    mapping = pd.read_excel(mapping_path)
+    mapping.columns = [str(column).strip() for column in mapping.columns]
+
+    rename: dict[str, str] = {}
+    for column in mapping.columns:
+        lowered = column.lower().strip()
+        if lowered in {"client_name_standardized", "standardized", "nama perusahaan standar", "perusahaan standar"}:
+            rename[column] = "client_name_standardized"
+        elif lowered in {"type_of_client", "type of client", "tipe klien", "kategori klien"}:
+            rename[column] = "type_of_client"
+
+    mapping = mapping.rename(columns=rename)
+    required_columns = {"client_name_standardized", "type_of_client"}
+    missing_columns = required_columns.difference(mapping.columns)
+    if missing_columns:
+        raise ValueError(
+            f"Client type mapping belum memiliki kolom wajib: {sorted(missing_columns)}"
+        )
+
+    mapping = mapping.dropna(subset=["client_name_standardized", "type_of_client"]).copy()
+    mapping["client_name_standardized"] = mapping["client_name_standardized"].astype(str).str.strip()
+    mapping["type_of_client"] = mapping["type_of_client"].astype(str).str.strip().str.upper()
+
+    invalid_rows = mapping[~mapping["type_of_client"].isin(ALLOWED_CLIENT_TYPES)]
+    if len(invalid_rows) > 0:
+        raise ValueError(
+            "Terdapat type_of_client di luar kategori resmi. "
+            f"Nilai tidak valid: {sorted(invalid_rows['type_of_client'].unique().tolist())}"
+        )
+
+    mapping = mapping.drop_duplicates(subset=["client_name_standardized"], keep="first")
+    return dict(
+        zip(
+            mapping["client_name_standardized"].tolist(),
+            mapping["type_of_client"].tolist(),
+            strict=True,
+        )
+    )
 
 
 def infer_client_type(
     company_name: str | None,
-    company_category: str | None,
-    master_client_dict: dict[str, str],
-) -> str:
-    nama_clean = (company_name or "").strip().lower()
+    _company_category: str | None,
+    alias_mapping: dict[str, str],
+    client_type_mapping: dict[str, str],
+) -> tuple[str, str | None]:
+    cleaned_name = clean_client_name_basic(company_name)
+    if not cleaned_name:
+        return "LAIN-LAIN", None
 
-    if nama_clean in master_client_dict:
-        return master_client_dict[nama_clean]
-
-    for keyword, client_type in master_client_dict.items():
-        if keyword and keyword in nama_clean:
-            return client_type
-
-    if company_category:
-        return COMPANY_CATEGORY_TO_CLIENT_TYPE.get(company_category, "LAIN LAIN")
-
-    return "LAIN LAIN"
+    standardized_name = alias_mapping.get(cleaned_name) or standardized_title(cleaned_name)
+    client_type = client_type_mapping.get(standardized_name, "LAIN-LAIN")
+    return client_type, standardized_name
 
 
 def summarize_numeric_series(values: pd.Series) -> dict[str, float | None]:
-    numeric = values.dropna()
-    if numeric.dtype == object:
-        numeric = numeric.apply(clean_harga_final)
-    numeric = numeric.dropna().astype(float)
-
+    numeric = values.dropna().astype(float)
     if numeric.empty:
         return {
             "count": 0,
@@ -325,128 +828,121 @@ def summarize_numeric_series(values: pd.Series) -> dict[str, float | None]:
 
 def build_dataset_audit(
     raw_df: pd.DataFrame,
-    required_filtered_df: pd.DataFrame,
-    numeric_filtered_df: pd.DataFrame,
     final_df: pd.DataFrame,
     dataset_path: Path,
-    mapping_path: Path,
+    alias_mapping_path: Path,
+    client_type_mapping_path: Path,
 ) -> dict[str, Any]:
-    target_delta = (
-        final_df["Harga Sebelum Approval"].astype(float) - final_df["Harga"].astype(float)
-    ).abs()
-    exact_same_ratio = float((target_delta == 0).mean()) if len(final_df) > 0 else 0.0
-    within_one_percent_ratio = (
-        float(
-            (
-                target_delta
-                <= final_df["Harga Sebelum Approval"].astype(float).abs().replace(0, np.nan) * 0.01
-            ).fillna(False).mean()
-        )
-        if len(final_df) > 0
-        else 0.0
-    )
-    duplicate_mask = final_df.duplicated(
-        subset=["Perusahaan", "Pekerjaan", "Tgl. Penawaran", "Harga Sebelum Approval"],
-        keep=False,
-    )
-    q1 = final_df["Harga Sebelum Approval"].quantile(0.25)
-    q3 = final_df["Harga Sebelum Approval"].quantile(0.75)
-    iqr = q3 - q1
-    outlier_threshold = q3 + 1.5 * iqr
-    outlier_count = int((final_df["Harga Sebelum Approval"] > outlier_threshold).sum())
+    drop_count = int(len(raw_df) - len(final_df))
+    ratio_series = final_df["PriceRatio"]
+    target_delta = (final_df["WinnerPrice"] - final_df["TenderPrice"]).abs()
 
     return {
         "dataset_version": sha256_for_file(dataset_path),
-        "client_mapping_version": sha256_for_file(mapping_path),
         "dataset_path": str(dataset_path),
-        "client_mapping_path": str(mapping_path),
+        "alias_mapping_version": sha256_for_file(alias_mapping_path),
+        "alias_mapping_path": str(alias_mapping_path),
+        "client_type_mapping_version": sha256_for_file(client_type_mapping_path),
+        "client_type_mapping_path": str(client_type_mapping_path),
+        "training_cutoff_date": TRAINING_CUTOFF_DATE.date().isoformat(),
         "raw_rows": int(len(raw_df)),
-        "required_field_rows": int(len(required_filtered_df)),
-        "numeric_clean_rows": int(len(numeric_filtered_df)),
         "final_rows": int(len(final_df)),
+        "dropped_rows": drop_count,
         "kept_ratio": float(len(final_df) / len(raw_df)) if len(raw_df) > 0 else 0.0,
-        "drop_summary": {
-            "missing_required_fields": int(len(raw_df) - len(required_filtered_df)),
-            "invalid_numeric_target": int(len(required_filtered_df) - len(numeric_filtered_df)),
-            "invalid_offer_date": int(len(numeric_filtered_df) - len(final_df)),
+        "target_distribution": summarize_numeric_series(final_df["WinnerPrice"]),
+        "tender_price_distribution": summarize_numeric_series(final_df["TenderPrice"]),
+        "price_ratio_distribution": summarize_numeric_series(ratio_series),
+        "target_delta_distribution": summarize_numeric_series(target_delta),
+        "client_type_distribution": {
+            key: int(value)
+            for key, value in final_df["Type of Client"].value_counts(dropna=False).to_dict().items()
         },
-        "target_distribution": {
-            "before_cleaning": summarize_numeric_series(required_filtered_df["Harga Sebelum Approval"]),
-            "after_cleaning": summarize_numeric_series(final_df["Harga Sebelum Approval"]),
-        },
-        "label_quality": {
-            "duplicate_candidate_rows": int(duplicate_mask.sum()),
-            "invalid_offer_date_rows": int(len(numeric_filtered_df) - len(final_df)),
-            "outlier_threshold": float(outlier_threshold) if pd.notna(outlier_threshold) else None,
-            "outlier_count": outlier_count,
-        },
-        "leakage_audit": {
-            "exact_same_price_count": int((target_delta == 0).sum()),
-            "exact_same_price_ratio": exact_same_ratio,
-            "within_one_percent_ratio": within_one_percent_ratio,
-            "target_delta_summary": summarize_numeric_series(target_delta),
+        "project_type_distribution": {
+            key: int(value)
+            for key, value in final_df["Type of Project"].value_counts(dropna=False).to_dict().items()
         },
     }
 
 
 def prepare_training_dataframe(
     dataset_path: Path | None = None,
-    client_mapping_path: Path | None = None,
+    alias_mapping_path: Path | None = None,
+    client_type_mapping_path: Path | None = None,
     include_audit: bool = False,
 ) -> pd.DataFrame | tuple[pd.DataFrame, dict[str, Any]]:
-    resolved_dataset_path = dataset_path or resolve_project_file(
-        DEFAULT_DATASET_FILENAME,
-        "ML_TRAINING_DATASET_PATH",
-    )
-    resolved_mapping_path = client_mapping_path or resolve_project_file(
-        DEFAULT_CLIENT_MAPPING_FILENAME,
-        "ML_CLIENT_MAPPING_PATH",
-    )
+    resolved_dataset_path = resolve_dataset_path(dataset_path)
+    resolved_alias_mapping_path = resolve_alias_mapping_path(alias_mapping_path)
+    resolved_client_type_mapping_path = resolve_client_type_mapping_path(client_type_mapping_path)
 
     raw_df = pd.read_excel(resolved_dataset_path).copy()
-    required_filtered_df = raw_df.drop(
-        columns=["No. Penawaran", "Contact Person", "No. Tlp.", "Email"],
-        errors="ignore",
+    raw_df.columns = [str(column).strip() for column in raw_df.columns]
+
+    df = raw_df.copy()
+    df["client_name"] = df.get("client_name", pd.Series(index=df.index, dtype="object"))
+    df["project_name"] = df.get("project_name", pd.Series(index=df.index, dtype="object"))
+    df["offer_no"] = df.get("offer_no", pd.Series(index=df.index, dtype="object"))
+    df["offer_date_final"] = pd.to_datetime(df.get("offer_date_final"), errors="coerce")
+    df["tender_price"] = df.get("tender_price", pd.Series(index=df.index, dtype="float64")).apply(clean_price_value)
+    df["winner_price"] = df.get("winner_price", pd.Series(index=df.index, dtype="float64")).apply(clean_price_value)
+
+    df["project_name_clean"] = df["project_name"].apply(clean_project_text)
+    df["client_name_clean"] = df["client_name"].apply(clean_client_name_basic)
+    df["year"] = df["offer_date_final"].dt.year
+    df["quarter"] = df["offer_date_final"].dt.quarter
+    df["month"] = df["offer_date_final"].dt.month
+    df["price_ratio"] = df["winner_price"] / df["tender_price"]
+    df.loc[~np.isfinite(df["price_ratio"]), "price_ratio"] = np.nan
+
+    alias_mapping = load_alias_mapping(resolved_alias_mapping_path)
+    client_type_mapping = load_client_type_mapping(resolved_client_type_mapping_path)
+
+    client_results = df["client_name"].apply(
+        lambda value: infer_client_type(value, None, alias_mapping, client_type_mapping)
     )
-    required_filtered_df = required_filtered_df.dropna(
-        subset=["Perusahaan", "Harga", "Harga Sebelum Approval", "Pekerjaan"]
+    df["client_name_standardized"] = client_results.apply(lambda value: value[1])
+    df["type_of_client"] = client_results.apply(lambda value: value[0])
+    df["type_of_project"] = df["project_name_clean"].apply(classify_project)
+    df["offer_no_normalized"] = df["offer_no"].apply(normalize_offer_no)
+    df["tender_group_id"] = df.apply(build_tender_group_id, axis=1)
+
+    final_df = df.dropna(
+        subset=[
+            "offer_date_final",
+            "tender_price",
+            "winner_price",
+            "year",
+            "quarter",
+            "month",
+            "project_name_clean",
+        ]
     ).copy()
+    final_df = final_df[
+        (final_df["offer_date_final"] < TRAINING_CUTOFF_DATE)
+        & (final_df["tender_price"] > 0)
+        & (final_df["winner_price"] > 0)
+        & final_df["price_ratio"].between(0.1, 10, inclusive="both")
+    ].copy()
 
-    numeric_filtered_df = required_filtered_df.copy()
-    for column in ["Harga", "Harga Sebelum Approval"]:
-        if column in numeric_filtered_df.columns:
-            numeric_filtered_df[column] = numeric_filtered_df[column].apply(clean_harga_final)
-
-    numeric_filtered_df = numeric_filtered_df.dropna(
-        subset=["Harga", "Harga Sebelum Approval"]
-    ).copy()
-
-    final_df = numeric_filtered_df.copy()
-    final_df["Tgl. Penawaran"] = pd.to_datetime(final_df["Tgl. Penawaran"], errors="coerce")
-    final_df = final_df.dropna(subset=["Tgl. Penawaran"]).copy()
-    final_df["Year"] = final_df["Tgl. Penawaran"].dt.year.astype(int)
-    final_df["Quarter"] = final_df["Tgl. Penawaran"].dt.quarter.astype(int)
-    final_df["Month"] = final_df["Tgl. Penawaran"].dt.month.astype(int)
-
-    client_dict = load_client_mapping(resolved_mapping_path)
-    final_df["Type of Client"] = final_df["Perusahaan"].apply(
-        lambda value: infer_client_type(value, None, client_dict)
-    )
-    final_df["Type of Project"] = final_df["Pekerjaan"].apply(lambda value: classify_project(value, None))
-    final_df["EstimatedPrice"] = final_df["Harga"].astype(float)
-    final_df["EstimatedPriceLog"] = np.log1p(final_df["EstimatedPrice"])
-    final_df["Harga Sebelum Approval_log"] = np.log1p(final_df["Harga Sebelum Approval"])
+    final_df["TenderPrice"] = final_df["tender_price"].astype(float)
+    final_df["WinnerPrice"] = final_df["winner_price"].astype(float)
+    final_df["TenderPriceLog"] = np.log1p(final_df["TenderPrice"])
+    final_df["WinnerPriceLog"] = np.log1p(final_df["WinnerPrice"])
+    final_df["Year"] = final_df["year"].astype(int)
+    final_df["Quarter"] = final_df["quarter"].astype(int)
+    final_df["Month"] = final_df["month"].astype(int)
+    final_df["Type of Client"] = final_df["type_of_client"].fillna("LAIN-LAIN").astype(str).str.upper().str.strip()
+    final_df["Type of Project"] = final_df["type_of_project"].fillna("LAIN-LAIN").astype(str).str.upper().str.strip()
+    final_df["PriceRatio"] = final_df["price_ratio"].astype(float)
 
     if not include_audit:
         return final_df
 
     audit = build_dataset_audit(
         raw_df=raw_df,
-        required_filtered_df=required_filtered_df,
-        numeric_filtered_df=numeric_filtered_df,
         final_df=final_df,
         dataset_path=resolved_dataset_path,
-        mapping_path=resolved_mapping_path,
+        alias_mapping_path=resolved_alias_mapping_path,
+        client_type_mapping_path=resolved_client_type_mapping_path,
     )
     return final_df, audit
 
@@ -462,7 +958,7 @@ def build_training_frame(df: pd.DataFrame, model_key: str) -> tuple[pd.DataFrame
         )
 
     feature_frame = df[feature_keys].copy()
-    target = df["Harga Sebelum Approval_log"].copy()
+    target = df["WinnerPriceLog"].copy()
     return feature_frame, target
 
 
@@ -472,19 +968,16 @@ def build_runtime_feature_payload(
     type_of_project: str,
 ) -> dict[str, Any]:
     work_date = pd.to_datetime(payload.workDate, errors="coerce")
-
     if pd.isna(work_date):
         raise ValueError("workDate is invalid and cannot be converted to datetime.")
 
     return {
+        "TenderPriceLog": float(np.log1p(float(payload.ruleBasedSummary.ruleBasedEstimateBeforeApproval))),
         "Year": int(work_date.year),
         "Quarter": int(work_date.quarter),
         "Month": int(work_date.month),
         "Type of Client": type_of_client,
         "Type of Project": type_of_project,
-        "EstimatedPriceLog": float(
-            np.log1p(float(payload.ruleBasedSummary.ruleBasedEstimateBeforeApproval))
-        ),
         "RuleBasedEstimateBeforeApproval": float(
             payload.ruleBasedSummary.ruleBasedEstimateBeforeApproval
         ),
@@ -493,10 +986,8 @@ def build_runtime_feature_payload(
 
 def load_model_contract(model_key: str) -> dict[str, Any]:
     contract_path = ARTIFACTS_DIR / f"{model_key}_feature_contract.json"
-
     if not contract_path.exists():
         raise FileNotFoundError(f"Model contract untuk '{model_key}' tidak ditemukan.")
-
     return load_json(contract_path)
 
 
@@ -506,7 +997,6 @@ def validate_feature_contract(
 ) -> None:
     required_keys = contract.get("runtime_feature_keys", [])
     missing_keys = [key for key in required_keys if key not in runtime_features]
-
     if missing_keys:
         raise ValueError(
             f"Runtime payload tidak memenuhi kontrak feature untuk model '{contract.get('model_key')}': {missing_keys}"
@@ -518,10 +1008,7 @@ def create_inference_frame(
     contract: dict[str, Any],
 ) -> pd.DataFrame:
     validate_feature_contract(runtime_features, contract)
-    ordered_payload = {
-        key: runtime_features[key]
-        for key in contract.get("runtime_feature_keys", [])
-    }
+    ordered_payload = {key: runtime_features[key] for key in contract.get("runtime_feature_keys", [])}
     return pd.DataFrame([ordered_payload])
 
 
@@ -536,7 +1023,6 @@ def load_json(path: Path) -> dict[str, Any]:
 def load_model_artifacts(model_key: str) -> ModelArtifacts:
     contract = load_model_contract(model_key)
     metadata_path = ARTIFACTS_DIR / "model_metadata.json"
-
     if not metadata_path.exists():
         raise FileNotFoundError("Model metadata belum tersedia.")
 

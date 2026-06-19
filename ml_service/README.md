@@ -10,27 +10,38 @@ python ml_service/train_models.py
 uvicorn ml_service.app.main:app --reload --port 8001
 ```
 
+## Resource Canonical
+
+Trainer runtime sekarang memakai file kanonik di `ml_service/resources/`:
+
+- `training_dataset.xlsx`
+- `client_alias_mapping.xlsx`
+- `client_type_mapping.xlsx`
+
 ## Prinsip Modeling
 
 - Target: `Harga Sebelum Approval`
 - `project_only`: feature proyek saja
 - `hybrid`: feature proyek + estimasi harga runtime
 
-Pada family `hybrid`, kolom historis `Harga` diperlakukan sebagai estimasi awal. Di runtime website, padanan semantiknya adalah `ruleBasedEstimateBeforeApproval`. Keduanya disejajarkan melalui transformasi `log1p`.
+Kontrak feature runtime diselaraskan ke notebook `revisi_price_prediction_using_extracted_data.ipynb`:
+
+- `project_only`: `Year`, `Quarter`, `Month`, `Type of Client`, `Type of Project`
+- `hybrid`: `TenderPriceLog`, `Year`, `Quarter`, `Month`, `Type of Client`, `Type of Project`
+
+Pada family `hybrid`, `TenderPriceLog` berasal dari `log1p(Harga)` pada data historis. Di runtime website, padanannya adalah `log1p(ruleBasedEstimateBeforeApproval)`.
 
 ## Evaluasi
 
 Trainer:
 
-- membersihkan data,
-- membangun dataset audit,
-- membandingkan 3 model utama,
-- memakai time-based holdout,
-- menghasilkan metadata dan feature contract untuk runtime.
+- membaca dataset extractor notebook,
+- menerapkan alias mapping dan client type mapping,
+- membangun classifier `Type of Project` sesuai `PROJECT_RULES` notebook,
+- mem-pin artifact runtime ke hyperparameter SVR notebook terbaru,
+- menyimpan random holdout, group-aware cross-validation, dan temporal holdout ke metadata.
 
-Notebook awal menunjukkan `SVR` sebagai model terbaik pada eksperimen awal. Artifact runtime sekarang tetap dipilih dari benchmark production-grade terbaru, tetapi pembandingnya tetap dibatasi ke 3 model utama: Linear Regression, Random Forest, dan SVR.
-
-Artifact evaluasi terbaru juga menyimpan residual analysis dan baseline `direct_estimate`, sehingga kita bisa mengukur apakah model benar-benar memberi nilai tambah di atas estimasi awal.
+Status validasi runtime tetap `limited`, karena benchmark ini disimpan sebagai pembanding ML, bukan estimator harga utama.
 
 ## Artifact
 

@@ -92,6 +92,21 @@ function formatValidationState(value: string | null | undefined) {
   }
 }
 
+function formatPredictionValue(
+  status: TenderWizardComputedState["aiBenchmark"]["hybrid"]["status"],
+  predictedPrice: number | null
+) {
+  if (predictedPrice !== null) {
+    return formatIdr(predictedPrice);
+  }
+
+  if (status === "error") {
+    return "Prediction failed";
+  }
+
+  return "Waiting for prediction";
+}
+
 export function EstimationSummary({
   projectInfo,
   computed,
@@ -105,6 +120,10 @@ export function EstimationSummary({
   onRefreshPrediction,
 }: EstimationSummaryProps) {
   const { summary, aiBenchmark } = computed;
+  const projectOnlyVariance =
+    aiBenchmark.projectOnly.predictedPrice === null
+      ? null
+      : summary.finalRoundedPrice - aiBenchmark.projectOnly.predictedPrice;
   const hybridVariance =
     aiBenchmark.hybrid.predictedPrice === null
       ? null
@@ -318,7 +337,8 @@ export function EstimationSummary({
               </div>
               <p className="text-on-surface-variant mt-1 text-sm">
                 Rule-based calculator tetap menjadi sumber harga utama. Benchmark ML di bawah ini
-                menggunakan model SVR dengan estimasi harga runtime sebagai input utama.
+                menampilkan dua model SVR notebook terbaru untuk pembanding, bukan estimator
+                utama.
               </p>
             </div>
             <Button variant="outline" onClick={onRefreshPrediction} disabled={isPredicting}>
@@ -330,21 +350,33 @@ export function EstimationSummary({
           <div className="bg-surface-container-low mt-6 space-y-3 rounded-[1.5rem] p-5">
             <SummaryRow label="Rule-Based Price" value={formatIdr(summary.finalRoundedPrice)} />
             <SummaryRow
-              label="ML Benchmark"
+              label={aiBenchmark.projectOnly.modelName}
               value={
-                aiBenchmark.hybrid.predictedPrice === null
-                  ? aiBenchmark.hybrid.status === "error"
-                    ? "Prediction failed"
-                    : "Waiting for prediction"
-                  : formatIdr(aiBenchmark.hybrid.predictedPrice)
+                formatPredictionValue(
+                  aiBenchmark.projectOnly.status,
+                  aiBenchmark.projectOnly.predictedPrice
+                )
               }
             />
             <SummaryRow
-              label="ML Validation"
+              label="Project-Only Validation"
+              value={formatValidationState(aiBenchmark.projectOnly.validationState)}
+            />
+            <SummaryRow
+              label="Project-Only Variance"
+              value={projectOnlyVariance === null ? "-" : formatIdr(projectOnlyVariance)}
+            />
+            <div className="border-outline-variant/40 border-t border-dashed pt-3" />
+            <SummaryRow
+              label={aiBenchmark.hybrid.modelName}
+              value={formatPredictionValue(aiBenchmark.hybrid.status, aiBenchmark.hybrid.predictedPrice)}
+            />
+            <SummaryRow
+              label="Hybrid Validation"
               value={formatValidationState(aiBenchmark.hybrid.validationState)}
             />
             <SummaryRow
-              label="Variance ML"
+              label="Hybrid Variance"
               value={hybridVariance === null ? "-" : formatIdr(hybridVariance)}
               emphasized
             />
@@ -365,6 +397,7 @@ export function EstimationSummary({
                   aiBenchmark.payload.ruleBasedSummary.ruleBasedEstimateBeforeApproval
                 )}
               />
+              <SummaryRow label="Best Available" value={aiBenchmark.bestAvailable ?? "-"} />
             </div>
             {/* {aiBenchmark.hybrid.validationSummary ? (
               <div className="text-on-surface-variant mt-4 space-y-2 text-sm">

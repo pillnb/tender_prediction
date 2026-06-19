@@ -397,7 +397,7 @@ export function createSvrPredictionPayload(
     ruleBasedSummary: {
       ruleBasedEstimateBeforeApproval: finalPriceBeforeRounding,
     },
-    requestedModels: ["hybrid"],
+    requestedModels: ["project_only", "hybrid"],
   };
 }
 
@@ -456,27 +456,29 @@ export function createIdleSvrPrediction(payload: SvrPredictionRequestPayload): S
       modelKey: "project_only",
       predictedPrice: null,
       currency: "IDR",
-      modelName: "Project-Only Benchmark",
+      modelName: "SVR Project-Only Benchmark",
       modelVersion: null,
       status: "idle",
       validationState: "limited",
-      validationSummary: "Benchmark project-only masih dalam tahap evaluasi production.",
+      validationSummary:
+        "Benchmark SVR project-only dipakai untuk membandingkan skenario tanpa tender price.",
     },
     hybrid: {
       modelKey: "hybrid",
       predictedPrice: null,
       currency: "IDR",
-      modelName: "ML SVR Benchmark",
+      modelName: "SVR Hybrid Benchmark",
       modelVersion: null,
       status: "idle",
       validationState: "limited",
       validationSummary:
-        "Benchmark SVR memakai estimasi harga runtime sebagai input utama.",
+        "Benchmark SVR hybrid memakai estimasi harga runtime sebagai input utama.",
     },
     bestAvailable: null,
     modelVersions: {},
     featureSnapshot: {
       projectName: payload.projectName,
+      companyName: payload.companyName,
       companyCategory: payload.companyCategory || null,
       projectCategory: payload.projectCategory,
       projectLocation: payload.projectLocation,

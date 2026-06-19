@@ -7,6 +7,9 @@ import {
 } from "@/lib/tender-repository";
 import type { TenderCalculationApiPayload } from "@/types/tender";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const mode = searchParams.get("mode");

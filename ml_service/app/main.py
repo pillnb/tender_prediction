@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import sys
 from typing import Any, Literal
 
 import numpy as np
@@ -15,7 +16,8 @@ from .core import (
     classify_project,
     create_inference_frame,
     infer_client_type,
-    load_client_mapping,
+    load_alias_mapping,
+    load_client_type_mapping,
     load_model_artifacts,
     load_model_contract,
 )
@@ -49,15 +51,17 @@ def predict_benchmark(payload: PredictBenchmarkPayload) -> dict[str, Any]:
     requested_at = datetime.utcnow().isoformat()
 
     try:
-        client_mapping = load_client_mapping()
+        alias_mapping = load_alias_mapping()
+        client_type_mapping = load_client_type_mapping()
     except Exception as error:
-        raise HTTPException(status_code=500, detail=f"Gagal memuat client mapping: {error}") from error
+        raise HTTPException(status_code=500, detail=f"Gagal memuat resource mapping ML: {error}") from error
 
     type_of_project = classify_project(payload.projectName, payload.projectCategory)
-    type_of_client = infer_client_type(
+    type_of_client, standardized_company_name = infer_client_type(
         payload.companyName,
         payload.companyCategory,
-        client_mapping,
+        alias_mapping,
+        client_type_mapping,
     )
     runtime_features = build_runtime_feature_payload(payload, type_of_client, type_of_project)
 
@@ -74,7 +78,7 @@ def predict_benchmark(payload: PredictBenchmarkPayload) -> dict[str, Any]:
             "modelVersion": None,
             "status": "idle",
             "validationState": "limited",
-            "validationSummary": "Model belum dievaluasi untuk runtime saat service dimuat.",
+            "validationSummary": "Model benchmark project-only menunggu eksekusi runtime.",
         },
         "hybrid": {
             "modelKey": "hybrid",
@@ -83,8 +87,8 @@ def predict_benchmark(payload: PredictBenchmarkPayload) -> dict[str, Any]:
             "modelName": MODEL_DISPLAY_NAMES["hybrid"],
             "modelVersion": None,
             "status": "idle",
-            "validationState": "blocked",
-            "validationSummary": "Model hybrid belum divalidasi untuk runtime.",
+            "validationState": "limited",
+            "validationSummary": "Model benchmark hybrid menunggu eksekusi runtime.",
         },
         "bestAvailable": None,
         "modelVersions": {},
@@ -92,6 +96,7 @@ def predict_benchmark(payload: PredictBenchmarkPayload) -> dict[str, Any]:
             "projectName": payload.projectName,
             "companyName": payload.companyName,
             "companyCategory": payload.companyCategory,
+            "standardizedCompanyName": standardized_company_name,
             "typeOfClient": type_of_client,
             "projectCategory": payload.projectCategory,
             "typeOfProject": type_of_project,
@@ -115,7 +120,8 @@ def predict_benchmark(payload: PredictBenchmarkPayload) -> dict[str, Any]:
 
             print(
                 f"[ml-benchmark] model={model_key} family={artifacts.contract.get('chosen_model_family')} "
-                f"validation={artifacts.contract.get('validation_state')} version={artifacts.metadata.get('model_version')}"
+                f"validation={artifacts.contract.get('validation_state')} version={artifacts.metadata.get('model_version')}",
+                file=sys.stderr,
             )
 
             response[target_field] = {
@@ -133,7 +139,7 @@ def predict_benchmark(payload: PredictBenchmarkPayload) -> dict[str, Any]:
             }
             response["modelVersions"][model_key] = artifacts.metadata.get("model_version")
         except Exception as error:
-            print(f"[ml-benchmark] model={model_key} status=error reason={error}")
+            print(f"[ml-benchmark] model={model_key} status=error reason={error}", file=sys.stderr)
             response[target_field] = {
                 "modelKey": model_key,
                 "predictedPrice": None,

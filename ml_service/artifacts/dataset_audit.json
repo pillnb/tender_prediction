@@ -1,56 +1,68 @@
 {
-  "dataset_version": "0cad5f023c7b3a939d19ed08b63b64f83ee935804db0234edb576077a5745dae",
-  "client_mapping_version": "69df401608b5f6000eca422ceda002736edd65738d2c65cc12ac0c183a72349a",
-  "dataset_path": "C:\\Users\\vasky\\Downloads\\TA_Vaskya\\website_kalkulator\\tender_fix.xlsx",
-  "client_mapping_path": "C:\\Users\\vasky\\Downloads\\TA_Vaskya\\website_kalkulator\\Mapping_Client_BKI_Fix.xlsx",
-  "raw_rows": 2430,
-  "required_field_rows": 564,
-  "numeric_clean_rows": 525,
-  "final_rows": 519,
-  "kept_ratio": 0.21358024691358024,
-  "drop_summary": {
-    "missing_required_fields": 1866,
-    "invalid_numeric_target": 39,
-    "invalid_offer_date": 6
-  },
+  "dataset_version": "dd618d5d6e6c648e67dad042a84ed553969c99727255c6e40cf81dce65ec0787",
+  "dataset_path": "C:\\Users\\vasky\\Downloads\\TA_Vaskya\\website_kalkulator\\ml_service\\resources\\training_dataset.xlsx",
+  "alias_mapping_version": "08dce1a57c4881864dc799e2a197d0922dd92d3f542c22af8e9e6401431d72c7",
+  "alias_mapping_path": "C:\\Users\\vasky\\Downloads\\TA_Vaskya\\website_kalkulator\\ml_service\\resources\\client_alias_mapping.xlsx",
+  "client_type_mapping_version": "3621c0422abb12ece13fc87009831669c93aedce533a0e72fc1c47b2ebf6a726",
+  "client_type_mapping_path": "C:\\Users\\vasky\\Downloads\\TA_Vaskya\\website_kalkulator\\ml_service\\resources\\client_type_mapping.xlsx",
+  "training_cutoff_date": "2026-01-01",
+  "raw_rows": 2622,
+  "final_rows": 681,
+  "dropped_rows": 1941,
+  "kept_ratio": 0.2597254004576659,
   "target_distribution": {
-    "before_cleaning": {
-      "count": 533,
-      "min": 650000.0,
-      "p25": 10000000.0,
-      "median": 18100000.0,
-      "mean": 37477382.018761724,
-      "p75": 35000000.0,
-      "max": 819000000.0
-    },
-    "after_cleaning": {
-      "count": 519,
-      "min": 650000.0,
-      "p25": 10000000.0,
-      "median": 18500000.0,
-      "mean": 36264392.32369942,
-      "p75": 35000000.0,
-      "max": 819000000.0
-    }
+    "count": 681,
+    "min": 400.0,
+    "p25": 10000000.0,
+    "median": 17500000.0,
+    "mean": 37131156.93832599,
+    "p75": 35000000.0,
+    "max": 871360000.0
   },
-  "label_quality": {
-    "duplicate_candidate_rows": 14,
-    "invalid_offer_date_rows": 6,
-    "outlier_threshold": 72500000.0,
-    "outlier_count": 41
+  "tender_price_distribution": {
+    "count": 681,
+    "min": 400.0,
+    "p25": 10000000.0,
+    "median": 18450000.0,
+    "mean": 43052962.052863434,
+    "p75": 35500000.0,
+    "max": 1414000000.0
   },
-  "leakage_audit": {
-    "exact_same_price_count": 340,
-    "exact_same_price_ratio": 0.6551059730250481,
-    "within_one_percent_ratio": 0.6628131021194605,
-    "target_delta_summary": {
-      "count": 519,
-      "min": 0.0,
-      "p25": 0.0,
-      "median": 0.0,
-      "mean": 17490720.331406552,
-      "p75": 1071917.0,
-      "max": 4263000000.0
-    }
+  "price_ratio_distribution": {
+    "count": 681,
+    "min": 0.10785398230088496,
+    "p25": 0.9904761904761905,
+    "median": 1.0,
+    "mean": 1.012414508186099,
+    "p75": 1.0,
+    "max": 6.4
+  },
+  "target_delta_distribution": {
+    "count": 681,
+    "min": 0.0,
+    "p25": 0.0,
+    "median": 0.0,
+    "mean": 8199859.4464023495,
+    "p75": 1350000.0,
+    "max": 1236000000.0
+  },
+  "client_type_distribution": {
+    "DEPHUB": 360,
+    "PERINDUSTRIAN": 180,
+    "MIGAS": 128,
+    "LAIN-LAIN": 5,
+    "MINERBA": 3,
+    "KELISTRIKAN": 3,
+    "BKI": 2
+  },
+  "project_type_distribution": {
+    "PENGUJIAN": 285,
+    "SERTIFIKASI": 212,
+    "INSPEKSI": 103,
+    "ENGINEERING": 37,
+    "ASSESSMENT": 20,
+    "SEWA/PERALATAN": 16,
+    "LAIN-LAIN": 7,
+    "SUPERVISI": 1
   }
 }

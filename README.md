@@ -51,16 +51,17 @@ Di production, `ML_SERVICE_URL` wajib diisi jika benchmark ML ingin aktif.
 Family benchmark yang tersedia:
 
 - `project_only`
-  Menggunakan feature proyek saja. Saat ini status validasinya masih `limited`.
+  Menggunakan feature proyek notebook tanpa tender price. Artifact runtime dipin ke SVR notebook terbaru dan status validasinya `limited`.
 - `hybrid`
-  Menggunakan feature proyek plus estimasi harga runtime yang disejajarkan dengan kolom historis `Harga`. Saat ini status validasinya `limited`.
+  Menggunakan feature proyek plus `TenderPriceLog`, yaitu `log1p(Harga)` historis yang disejajarkan dengan `log1p(ruleBasedEstimateBeforeApproval)` saat runtime. Status validasinya `limited`.
 
 Poin penting:
 
-- Notebook awal membuktikan bahwa `SVR` adalah model terbaik pada eksperimen awal.
-- Implementasi production-grade sekarang tetap mempertahankan premis notebook: `Harga` historis dipakai sebagai estimasi, lalu disejajarkan dengan `ruleBasedEstimateBeforeApproval` saat runtime.
-- Setelah evaluasi ulang dengan time-based holdout yang tetap dibatasi ke 3 model utama, kandidat terbaik untuk artifact `hybrid` saat ini adalah `Linear Regression`.
-- Meski begitu, `hybrid` belum mengalahkan baseline estimasi langsung, sehingga nilai ilmiahnya lebih kuat sebagai benchmark/analisis residual daripada pengganti estimasi utama.
+- `ml_service` sekarang disejajarkan ke notebook `revisi_price_prediction_using_extracted_data.ipynb`.
+- Trainer memakai resource kanonik di `ml_service/resources/`: dataset extractor, alias mapping, dan client type mapping.
+- Runtime `Type of Client` mengikuti alias mapping + `client_type_mapping.xlsx`, bukan fallback `companyCategory`.
+- Runtime `Type of Project` dihitung dari `projectName` memakai `PROJECT_RULES` notebook.
+- Benchmark ini tetap diposisikan sebagai pembanding ML, bukan pengganti rule-based estimator utama.
 
 ## Artefak Validasi ML
 

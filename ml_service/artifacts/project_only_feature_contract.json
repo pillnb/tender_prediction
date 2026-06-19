@@ -1,8 +1,8 @@
 {
   "model_key": "project_only",
-  "display_name": "Project-Only Benchmark",
-  "model_version": "ml-benchmark-validation-v3",
-  "schema_version": "runtime-feature-schema-v3",
+  "display_name": "SVR Project-Only Benchmark",
+  "model_version": "svr-notebook-aligned-v1",
+  "schema_version": "runtime-feature-schema-v4",
   "runtime_feature_keys": [
     "Year",
     "Quarter",
@@ -20,24 +20,33 @@
     "Type of Project"
   ],
   "feature_semantics": {
-    "Year": "Tahun dari Tgl. Penawaran / workDate",
-    "Quarter": "Kuartal dari Tgl. Penawaran / workDate",
-    "Month": "Bulan dari Tgl. Penawaran / workDate",
-    "Type of Client": "Kategori client hasil mapping perusahaan / companyCategory",
-    "Type of Project": "Kategori proyek hasil klasifikasi pekerjaan / projectCategory"
+    "Year": "Tahun dari offer_date_final atau workDate runtime.",
+    "Quarter": "Kuartal dari offer_date_final atau workDate runtime.",
+    "Month": "Bulan dari offer_date_final atau workDate runtime.",
+    "Type of Client": "Type of Client dari alias mapping dan client_type_mapping notebook.",
+    "Type of Project": "Type of Project hasil PROJECT_RULES notebook dari projectName."
   },
   "runtime_enabled": true,
   "validation_state": "limited",
-  "validation_summary": "Model sedikit mengungguli baseline median, tetapi kualitas holdout belum cukup kuat untuk klaim production-ready.",
+  "validation_summary": "Model SVR project-only disimpan untuk membandingkan skenario tanpa tender price, tetapi validasinya tetap terbatas untuk benchmark.",
   "chosen_model_family": "svr_linear",
   "holdout_metrics": {
-    "mae": 23783508.03044675,
-    "rmse": 54165676.48074703,
-    "mape": 1.0072400217587483,
-    "r2": -0.09181678625666789,
-    "median_absolute_error": 9938113.774027003,
-    "within_10pct_ratio": 0.07692307692307693,
-    "within_20pct_ratio": 0.11538461538461539,
-    "within_30pct_ratio": 0.23076923076923078
-  }
+    "mae": 24720628.860090796,
+    "rmse": 72263749.52721818,
+    "mape": 1.6693589011690728,
+    "r2": 0.013868128837740135,
+    "median_absolute_error": 12411696.52982472,
+    "within_10pct_ratio": 0.0851063829787234,
+    "within_20pct_ratio": 0.11347517730496454,
+    "within_30pct_ratio": 0.20567375886524822
+  },
+  "scenario_id": "without_tender_price",
+  "scenario_label": "ML Tanpa Tender Price",
+  "hyperparameters": {
+    "kernel": "linear",
+    "C": 1.0,
+    "epsilon": 0.1,
+    "gamma": "scale"
+  },
+  "source_notebook": "revisi_price_prediction_using_extracted_data.ipynb"
 }

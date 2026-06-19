@@ -8,6 +8,9 @@ import {
 } from "@/lib/tender-repository";
 import type { TenderCalculationApiPayload } from "@/types/tender";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 type RouteContext = {
   params: Promise<{
     id: string;
